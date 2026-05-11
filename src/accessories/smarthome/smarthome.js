@@ -4,6 +4,7 @@ module.exports = {
   SHBlindAccessory: require('./blind/blind.accessory'),
   SHButtonAccessory: require('./button/button.accessory'),
   SHContactAccessory: require('./contact/contact.accessory'),
+  SHEnergyMeterAccessory: require('./energy-meter/energy-meter.accessory'),
   SHHumidityAccessory: require('./humidity/humidity.accessory'),
   SHLightbulbAccessory: require('./lightbulb/lightbulb.accessory'),
   SHOutletAccessory: require('./outlet/outlet.accessory'),

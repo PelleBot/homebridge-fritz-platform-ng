@@ -680,6 +680,63 @@ class Handler {
 
         return state;
       }
+      case 'smarthome-energy-meter': {
+        // Energy meter is a read-only sensor exposed as an Outlet service.
+        // The On characteristic stays locked-true; we only push powermeter values.
+        let service = accessory.getService(this.api.hap.Service.Outlet);
+
+        try {
+          let device = this.smarthomeList.devices.find((device) =>
+            device.ain.includes(accessory.context.config.ain)
+          );
+          logger.debug(device, `${accessory.displayName} (${subtype})`);
+
+          if (device) {
+            accessory.context.config.ain = device.ain;
+
+            if (device.online) {
+              if (device.powermeter) {
+                // @seydx/fritzbox normalizes:
+                //   power  -> watts  (mW / 1000)
+                //   energy -> kWh    (Wh / 1000)
+                // For an OBIS reader the live power is the household NET load and
+                // is mirrored on both sub-AINs (-1 and -2). The cumulative `energy`
+                // field is per-direction and therefore different per sub-AIN.
+                const currentPower = Math.abs(device.powermeter.power || 0);
+                const totalEnergy = device.powermeter.energy || 0;
+
+                service
+                  .getCharacteristic(this.api.hap.Characteristic.CurrentConsumption)
+                  .updateValue(currentPower);
+
+                service
+                  .getCharacteristic(this.api.hap.Characteristic.TotalConsumption)
+                  .updateValue(totalEnergy);
+
+                service.getCharacteristic(this.api.hap.Characteristic.On).updateValue(true);
+                service.getCharacteristic(this.api.hap.Characteristic.OutletInUse).updateValue(true);
+              } else {
+                logger.warn(
+                  'Can not find powermeter data — sub-AIN (-1 / -2) correct?',
+                  `${accessory.displayName} (${subtype})`
+                );
+              }
+            } else {
+              logger.warn('Device offline!', `${accessory.displayName} (${subtype})`);
+            }
+          } else {
+            logger.warn(
+              `Can not find device with AIN: ${accessory.context.config.ain}`,
+              `${accessory.displayName} (${subtype})`
+            );
+          }
+        } catch (err) {
+          logger.warn('An error occured during getting state!', `${accessory.displayName} (${subtype})`);
+          logger.error(err, `${accessory.displayName} (${subtype})`);
+        }
+
+        return true;
+      }
       case 'smarthome-humidity': {
         let state = accessory
           .getService(this.api.hap.Service.HumiditySensor)

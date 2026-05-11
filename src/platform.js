@@ -20,6 +20,7 @@ const {
   SHBlindAccessory,
   SHButtonAccessory,
   SHContactAccessory,
+  SHEnergyMeterAccessory,
   SHHumidityAccessory,
   SHLightbulbAccessory,
   SHOutletAccessory,
@@ -205,6 +206,8 @@ FritzPlatform.prototype = {
           new SHOutletLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         else if (device.subtype === 'smarthome-switch-lightbulb' && !device.energy)
           new SHSwitchLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster);
+        else if (device.subtype === 'smarthome-energy-meter')
+          new SHEnergyMeterAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         break;
       default:
         logger.warn(`Can not setup accessory, type (${device.type}) unknown!`, device.name);
