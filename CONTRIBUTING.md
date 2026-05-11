@@ -6,7 +6,7 @@ Vielen Dank dass du zu `@pellini/homebridge-fritz-platform` beitragen willst. Di
 
 Bevor du ein Issue öffnest, **bitte prüfe**:
 
-1. **Ist das Issue schon offen oder gelöst?** Suche in [bestehenden Issues](https://github.com/PelleBot/homebridge-fritz-platform/issues?q=is%3Aissue).
+1. **Ist das Issue schon offen oder gelöst?** Suche in [bestehenden Issues](https://github.com/PelleBot/homebridge-fritz-platform-ng/issues?q=is%3Aissue).
 2. **Ist dein Anliegen im Scope?** Wenn es um Callmonitor, Presence, Network-Watcher, WoL, Childlock oder Telegram-Notifications geht — diese Subsysteme sind aus diesem Fork entfernt (siehe README). Issues dazu werden geschlossen mit Verweis auf den Original-Repo oder alternative Plugins.
 3. **Hast du minimale Infos?** Ein Issue ohne Versions-Angaben + Logs + Config-Auszug ist schwer zu beantworten. Bitte das Issue-Template nutzen.
 

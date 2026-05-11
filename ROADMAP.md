@@ -3,7 +3,7 @@
 Ausgehend vom aktuellen Stand: ein funktionsfähiger HB-2.0-Minimal-Patch-Fork läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren. Code ist in `feat/hb2-minimal-patch` mit 9 Commits, noch nicht öffentlich gepublished.
 
 **Distribution-Modell:**
-- GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform` (oder gewähltem Namen)
+- GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform-ng` (oder gewähltem Namen)
 - npm-Paket: **`@pellini/homebridge-fritz-platform`**, anfangs nur unter `beta`-Tag (technisch im Index, aber nicht als "latest" — frühe Nutzer brauchen explizit `@beta`)
 - Migration zu `latest`-Tag nach 2-4 Wochen produktiver Bestätigung
 
@@ -17,7 +17,7 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 
 ### 0.1 Repository-Initialisierung
 
-- [ ] Maintainer entscheidet finalen Repo-Namen + npm-Paket-Namen (Vorschlag: `homebridge-fritz-platform-ng` oder `@PelleBot/homebridge-fritz-platform`)
+- [ ] Maintainer entscheidet finalen Repo-Namen + npm-Paket-Namen (Vorschlag: `homebridge-fritz-platform-ng` oder `@PelleBot/homebridge-fritz-platform-ng`)
 - [ ] Neues GitHub-Repo unter `PelleBot/<name>` erstellen (public, MIT-License erbt von Upstream)
 - [ ] Lokales Repo pushen, `feat/hb2-minimal-patch` als `main` setzen oder als Default-Branch konfigurieren
 - [ ] Tag `v6.1.0-hb2patch.0` für aktuellen Stand setzen (markiert "running productively on M4")

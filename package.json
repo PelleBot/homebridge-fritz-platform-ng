@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PelleBot/homebridge-fritz-platform.git"
+    "url": "git+https://github.com/PelleBot/homebridge-fritz-platform-ng.git"
   },
   "author": "PelleBot <pelle-bot@we-success.de>",
   "contributors": [
@@ -17,9 +17,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/PelleBot/homebridge-fritz-platform/issues"
+    "url": "https://github.com/PelleBot/homebridge-fritz-platform-ng/issues"
   },
-  "homepage": "https://github.com/PelleBot/homebridge-fritz-platform#readme",
+  "homepage": "https://github.com/PelleBot/homebridge-fritz-platform-ng#readme",
   "keywords": [
     "fritz",
     "fritzbox",

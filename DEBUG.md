@@ -69,4 +69,4 @@ Häufige Fehlerbilder:
 
 ## Issues mit reproduzierbarem Debug-Output melden
 
-Wenn du nach diesen Schritten weiter Probleme hast, [öffne ein Issue](https://github.com/PelleBot/homebridge-fritz-platform/issues/new/choose) und füge den relevanten Debug-Log-Auszug an. Bitte das Issue-Template nutzen — es führt durch alle nötigen Informationen.
+Wenn du nach diesen Schritten weiter Probleme hast, [öffne ein Issue](https://github.com/PelleBot/homebridge-fritz-platform-ng/issues/new/choose) und füge den relevanten Debug-Log-Auszug an. Bitte das Issue-Template nutzen — es führt durch alle nötigen Informationen.

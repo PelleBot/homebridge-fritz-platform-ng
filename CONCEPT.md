@@ -26,7 +26,7 @@ Der LLM-Agent ist **kein Bot-Account auf GitHub**. Es gibt keine automatischen A
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  GitHub Repository: PelleBot/homebridge-fritz-platform          │
+│  GitHub Repository: PelleBot/homebridge-fritz-platform-ng          │
 │  (public, MIT, branch-protected main, PR-only)                 │
 └────────────────────────────────────────────────────────────────┘
                           │
