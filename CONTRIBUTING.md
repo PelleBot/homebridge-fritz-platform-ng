@@ -41,8 +41,9 @@ Bevor du ein Issue öffnest, **bitte prüfe**:
 Hohe Priorität (siehe [`ROADMAP.md`](./ROADMAP.md)):
 
 - Test-Suite ausbauen (Mock-Layer für AHA-API)
-- `custom.types.js` ES6-Port (damit Router-Toggles wieder funktionieren)
-- FRITZ!Smart Energy 250 OBIS-Reader-Verbesserungen
+- FRITZ!Smart Energy 250 OBIS-Reader-Verbesserungen (Phase 2.3)
+- `config.schema.json` Field-Hilfetexte verbessern (Phase 2.1 noch nicht ganz fertig)
+- energy-meter accType ins Schema aufnehmen (Phase 2.1)
 - Doku-Verbesserungen, vor allem zur Migration vom Original
 - Sauberere Logging-Strukturen
 

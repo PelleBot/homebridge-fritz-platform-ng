@@ -74,12 +74,12 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 - [ ] Integration-Tests: Plugin-Load + 1 Accessory pro Typ, gegen Mocks
 - [ ] Test-Coverage-Threshold in CI: mindestens 30% initial, Ziel 60% nach 6 Monaten
 
-### 1.2 `custom.types.js` ES6-Port
+### 1.2 `custom.types.js` ES6-Port — ✓ DONE in v6.1.0-hb2patch.1
 
-- [ ] 22 Custom-Characteristics auf ES6-Klassen portieren (Pattern: wie eve.types.js, mit `declare`-Helper)
-- [ ] Service.Switch-Override **nicht** portieren (HAP-v2-Risiko, nicht nötig)
-- [ ] Test: produktive Config mit `hide: false` auf Router muss wieder funktionieren (= Router-Toggles in HomeKit sichtbar)
-- [ ] Dokumentieren in CHANGELOG: "Router-Toggles (Wifi/DECT/etc.) wieder verfügbar"
+- [x] 21 Custom-Characteristics auf ES6-Klassen portiert (Pattern: wie eve.types.js, mit `declare`-Helper)
+- [x] Service.Switch-Override **nicht** portiert (HAP-v2-Risiko, nicht nötig — Charakteristiken werden dynamisch via `service.addCharacteristic()` zugewiesen)
+- [x] Test: produktive Config mit `hide: false` auf Router funktioniert wieder
+- [x] Dokumentiert in CHANGELOG v6.1.0-hb2patch.1
 
 ### 1.3 fakegato-history Alternative
 
@@ -109,9 +109,9 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 
 *Ziel: das Plugin ist genauso komfortabel zu benutzen wie Upstream-v6 in seinen besten Tagen, plus moderne Verbesserungen.*
 
-### 2.1 Config-Schema
+### 2.1 Config-Schema — teilweise DONE in v6.1.0-hb2patch.1
 
-- [ ] `config.schema.json` von Out-of-Scope-Subsystemen bereinigen (callmonitor, presence, network, wol, childlock, extras) — die werden im Plugin eh nicht mehr gelesen, sollten dann auch nicht in der Config-UI angeboten werden
+- [x] `config.schema.json` von Out-of-Scope-Subsystemen bereinigt (callmonitor, presence, network, wol, childlock, extras, telegram) — 73KB → 32KB (-57%)
 - [ ] Field-Hilfetexte verbessern (z.B. AIN-Format-Erklärung)
 - [ ] energy-meter accType ins Schema aufnehmen (mit Hinweis "experimental, Apple Home zeigt Werte nicht nativ")
 

@@ -2,6 +2,27 @@
 
 > **Hinweis zum Format:** Dieser Changelog setzt die Versionierung des Original-Plugins (`SeydX/homebridge-fritz-platform`, Maintainership eingestellt nach v6.0.19) fort. Ab `6.1.0-hb2patch.0` werden die Releases unter dem npm-Paket `@pellebot/homebridge-fritz-platform` veröffentlicht.
 
+# v6.1.0-hb2patch.1 — 2026-05-11 (Polish-Release, beta)
+
+**Folge-Release** zum Initial-Fork-Release vom gleichen Tag. Bringt vollwertige Router-Toggle-Unterstützung, ein deutlich schlankeres Config-UI-X-Schema und korrigiert den npm-Scope-Namen.
+
+## Neuerungen
+
+- **`custom.types.js` auf ES6-Klassen portiert** (Phase 1.2 der Roadmap). Die 21 Custom-Characteristics für WiFi-Toggles, WPS, DECT-Basis, Reconnect, AB, Rufumleitung, DNS, Phonebook, Caller/Called, Download/Upload/Ping sind wieder registriert. **Ergebnis: Router-Accessory mit `hide: false` funktioniert jetzt vollständig**, die entsprechenden Switches/Sensoren erscheinen in HomeKit. Service-Switch-Override aus dem Original wurde nicht portiert (HAP-v2-Risiko, nicht nötig — Charakteristiken werden dynamisch via `service.addCharacteristic()` zugewiesen).
+- **`config.schema.json` von 73 KB auf 32 KB entschlackt** (Phase 2.1 der Roadmap). Out-of-Scope-Sektionen (presence, wol, network, childLock, callmonitor, extras, telegram) sowie unbenutzte Sub-Felder (options.presence, options.reboot) entfernt. Config UI X zeigt jetzt nur noch die Sektionen die tatsächlich vom Plugin gelesen werden: Name, Log, Devices, Smart Home, Options.
+
+## Breaking Changes ggü. v6.1.0-hb2patch.0
+
+- **npm-Scope-Namensänderung**: das Paket heißt jetzt `@pellebot/homebridge-fritz-platform`. Der zwischenzeitliche `@pellini`-Scope war ein Tippfehler. Falls du das alte Paket lokal installiert hast: `npm uninstall -g @pellini/homebridge-fritz-platform` und mit dem neuen Scope reinstallieren. Die `registerPlatform`-Kennung bleibt `homebridge-fritz-platform` (cached Accessories werden weiter gematched, kein iPhone-Re-Pairing).
+- **`hide` Empfehlung gedreht**: in hb2patch.0 stand "`hide: true` ist Pflicht weil Router-Toggles crashen". Das ist mit diesem Release nicht mehr nötig. Default-Empfehlung jetzt `hide: false` (Router-Toggles sichtbar). Wer das nicht will, kann auf `hide: true` setzen.
+
+## Bekannte Limitationen (unverändert ggü. hb2patch.0)
+
+- **Apple Home Energy-Display fehlt**: Apple HomeKit hat keine native "Power Meter"-Service-Klasse. Energy-Meter-Werte nur in Eve App sichtbar.
+- **fakegato-history Stub**: keine historischen Eve-App-Graphen. Live-Werte funktionieren.
+
+---
+
 # v6.1.0-hb2patch.0 — 2026-05-11 (Fork-Initial-Release, beta)
 
 **Erste Version des Wartungs-Forks.** Migrationspatch für Homebridge 2.0 + Node 22/24, basierend auf `SeydX/homebridge-fritz-platform@6.0.19` (letzte gepublishte Upstream-Version).
@@ -10,7 +31,7 @@
 
 - **Subsysteme entfernt** (siehe README für Begründung): callmonitor, presence, network, wol, childlock, extras (DNS, alarm, wakeup, ringlock, phoneBook, fallbackInternet). Config-Einträge für diese Subsysteme werden ignoriert.
 - **`fakegato-history` als No-Op gestubbt** — Eve-App-History-Graphen funktionieren nicht (kein HAP-v2-kompatibler Fork verfügbar). Live-Werte unverändert sichtbar.
-- **Router-Accessory standardmäßig versteckt empfohlen** (`hide: true`). Die Custom-Charakteristiken für WiFi/DECT/WPS-Toggles sind aktuell nicht ES6-portiert; bei `hide: false` und konfigurierten Router-Options crasht der Child-Bridge-Start. Geplant für nächstes Release.
+- **Router-Accessory standardmäßig versteckt empfohlen** (`hide: true`). Die Custom-Charakteristiken für WiFi/DECT/WPS-Toggles sind in dieser Version nicht ES6-portiert; bei `hide: false` und konfigurierten Router-Options crasht der Child-Bridge-Start. → ✅ **Behoben in v6.1.0-hb2patch.1** (ES6-Port abgeschlossen, `hide: false` empfohlen).
 - **Node-Mindestversion auf ≥22.12** angehoben. Node 14/16/18/20 nicht mehr supportet.
 - **Homebridge ≥1.6 oder ≥2.0** als Engines-Range. HB 1.6/1.7 noch akzeptiert, getestet ist primär HB 1.8.5+ und HB 2.0.x.
 
@@ -20,20 +41,20 @@
 - **ESM-Entrypoint** (`index.mjs`) via `createRequire`, internes `src/`-CommonJS-Tree unverändert (Minimal-Patch-Prinzip). `src/package.json` mit `type: commonjs` für korrektes Module-Scoping.
 - **Neuer `accType: "energy-meter"`** (experimentell) für AVM Fritz!Smart Energy 250 im OBIS-Reader-Modus. Liest Sub-AINs `<base>-1` (OBIS 1.8 Bezug) und `<base>-2` (OBIS 2.8 Einspeisung), exponiert `CurrentConsumption` (W) und `TotalConsumption` (kWh) als Eve-Charakteristiken auf einem read-only Outlet-Service. Apple Home stock zeigt nur Plug-Tile; Werte in Eve App sichtbar.
 
-## Bekannte Limitationen
+## Bekannte Limitationen (in dieser Version — neuere siehe v6.1.0-hb2patch.1)
 
-- **Router-Toggles deaktiviert**: WiFi 2.4/5GHz/Guest, WPS, DECT, AW, Reconnect, Download/Upload/Ping-Charakteristiken sind im aktuellen Release nicht funktional. Workaround: `hide: true` auf Router-Config setzen. Behebung in nächstem Release durch ES6-Port von `custom.types.js`.
+- **Router-Toggles deaktiviert**: WiFi 2.4/5GHz/Guest, WPS, DECT, AW, Reconnect, Download/Upload/Ping-Charakteristiken nicht funktional. Workaround: `hide: true` auf Router-Config. → **Behoben in v6.1.0-hb2patch.1**.
 - **Apple Home Energy-Display fehlt**: Apple HomeKit hat keine native "Power Meter"-Service-Klasse. Energy-Meter-Werte nur in Eve App sichtbar.
 - **fakegato-history Stub**: keine historischen Eve-App-Graphen. Live-Werte funktionieren.
 
 ## Migration-Hinweise
 
-Wenn du von Upstream `homebridge-fritz-platform@6.0.19` upgradest:
+Wenn du von Upstream `homebridge-fritz-platform@6.0.19` upgradest (besser direkt auf v6.1.0-hb2patch.1 gehen — siehe oben):
 
 1. Backup deines `~/.homebridge/` Verzeichnisses
 2. `npm uninstall -g homebridge-fritz-platform`
-3. `npm install -g @pellebot/homebridge-fritz-platform@beta`
-4. Config: `hide: true` beim Router setzen, ggf. veraltete Subsystem-Einträge entfernen
+3. `npm install -g @pellebot/homebridge-fritz-platform@beta` (oder via lokalem .tgz)
+4. Config: ggf. veraltete Subsystem-Einträge entfernen (presence, callmonitor etc.)
 5. Homebridge auf 1.8.5+ oder 2.0+ upgraden, Node 22/24 sicherstellen
 6. Restart
 

@@ -9,11 +9,15 @@
 
 ## Status
 
-Dieser Fork ist **als `beta`-Release auf npm verfügbar**. Er läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-Lampe und 2 Temperatursensoren auf Homebridge 2.0.2-beta + Node 24. **Noch nicht als `latest`-Tag auf npm** — installiere bewusst mit `@beta`.
+Dieser Fork läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-Lampe und 2 Temperatursensoren auf Homebridge 2.0.2-beta + Node 24. **Aktueller Stand: v6.1.0-hb2patch.1**.
+
+Sobald auf npm gepublished:
 
 ```bash
 npm install -g @pellebot/homebridge-fritz-platform@beta
 ```
+
+Bis dahin: vom GitHub-Source-Tree installieren (siehe [Installation](#installation) unten).
 
 ## Was dieser Fork kann
 
@@ -25,7 +29,7 @@ Der Scope ist **bewusst kleiner** als das Original — wir konzentrieren uns auf
 - **FRITZ!DECT 200 / 210** (schaltbare Steckdosen) — An/Aus + Energiemessung
 - **FRITZ!Smart Energy 250** (OBIS-Reader-Modus) — experimentell, eigener `accType: "energy-meter"`, Werte in Eve App sichtbar (Apple Home stock zeigt sie nicht)
 
-Über `TR-064` wird die FritzBox-Verbindung initialisiert (für AHA-API-Auth) — Router-Accessory selbst (WiFi-Toggles, DECT-Schalter, etc.) ist standardmäßig deaktiviert (`hide: true`). Wer die Router-Funktionen wirklich braucht, kann das in der Config aktivieren, sollte aber wissen dass der Code-Pfad weniger Test-Coverage hat als die DECT-Linie.
+Über `TR-064` wird die FritzBox-Verbindung initialisiert (für AHA-API-Auth). Das Router-Accessory selbst (WiFi-Toggles, DECT-Basis, WPS, Reconnect, AB, Rufumleitung etc.) ist **seit v6.1.0-hb2patch.1 wieder voll funktional** — die Custom-Charakteristiken sind ES6-portiert. Per default ist es `hide: false`; setze `hide: true` wenn du nur die DECT-Geräte willst und keine Router-Switches in HomeKit.
 
 ## Was dieser Fork bewusst NICHT macht
 
@@ -58,9 +62,22 @@ Wenn du eine dieser Funktionen brauchst, ist dieser Fork das falsche Plugin. Hie
 ```bash
 # Wenn Homebridge selbst noch upgegradet wird:
 npm install -g homebridge@latest homebridge-config-ui-x@latest
+```
 
-# Plugin installieren:
+**Nach npm-Publish** (in Planung):
+
+```bash
 npm install -g @pellebot/homebridge-fritz-platform@beta
+```
+
+**Vor npm-Publish — direkt aus dem Git-Repo:**
+
+```bash
+git clone https://github.com/PelleBot/homebridge-fritz-platform-ng.git
+cd homebridge-fritz-platform-ng
+npm pack
+# Erzeugt pellebot-homebridge-fritz-platform-<version>.tgz
+npm install -g ./pellebot-homebridge-fritz-platform-*.tgz
 ```
 
 Anschließend Homebridge neu starten (z.B. via Config UI X "Restart"-Button).
@@ -109,9 +126,9 @@ Minimal-Config (`~/.homebridge/config.json`):
 }
 ```
 
-`hide: true` beim Router ist **wichtig** für diesen Fork — sonst versucht das Plugin Router-Wifi-Toggles anzulegen, deren Custom-Charakteristiken aktuell nicht ES6-portiert sind.
+**Tipp zum Router-Accessory:** seit v6.1.0-hb2patch.1 funktioniert `hide: false` problemfrei — die Router-Switches (WiFi 2.4/5/Gast, WPS, DECT, AB, Reconnect, etc.) erscheinen dann in HomeKit als zusätzliche Tiles. Setze `hide: true` wenn du das nicht brauchst.
 
-Vollständige Config-Optionen werden über das **Homebridge Config UI X** Plugin grafisch unterstützt.
+Vollständige Config-Optionen werden über das **Homebridge Config UI X** Plugin grafisch unterstützt — das Schema wurde im Fork von 73KB auf 32KB entschlackt (Out-of-Scope-Subsysteme entfernt).
 
 ## Migration vom Original-Plugin
 
@@ -121,7 +138,7 @@ Wenn du bisher das unmaintained Original (`homebridge-fritz-platform@6.0.19`) ei
 2. **Update Homebridge auf 2.x**: `npm install -g homebridge@latest`
 3. **Original-Plugin entfernen**: `npm uninstall -g homebridge-fritz-platform`
 4. **Fork installieren**: `npm install -g @pellebot/homebridge-fritz-platform@beta`
-5. **Config anpassen**: `hide: true` beim Router setzen, ggf. nicht-mehr-genutzte Subsysteme aus der Config entfernen (presence, callmonitor, etc. — werden eh ignoriert, aber sauberer wenn weg)
+5. **Config anpassen**: ggf. nicht-mehr-genutzte Subsysteme aus der Config entfernen (presence, callmonitor, wol, childLock, network, extras, telegram — werden eh ignoriert, aber sauberer wenn weg). Router-Accessory kann beim default `hide: false` bleiben.
 6. **Homebridge neu starten**
 
 Wenn du Accessory-UUIDs unverändert lässt (gleiche Device-Namen wie vorher), behält HomeKit das Pairing bei. Kein iPhone-Re-Pairing nötig.

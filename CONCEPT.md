@@ -86,7 +86,7 @@ Datei im Repo-Root, primär für **Claude-Sessions des Maintainers** (nicht für
 - Projekt-Scope (DECT-only, was bewusst rausfällt)
 - Architektur-Übersicht (welche Files machen was, Migration-Kontext von v6.0.19 → v6.1.x)
 - Konventionen (Code-Style, Commit-Format, Eve-Charakteristiken via String-Literalen)
-- Bekannte Fallstricke (z.B. "fakegato-history ist HAP-v2-inkompatibel, gestubbt; custom.types.js noch nicht ES6-portiert")
+- Bekannte Fallstricke (z.B. "fakegato-history ist HAP-v2-inkompatibel, gestubbt — Eve-History-Graphen gehen nicht; Apple Home zeigt keine Eve-Custom-Charakteristiken nativ")
 - Maintainer-Präferenzen (lieber konservativ, kleinere PRs, ehrlich über Limitationen kommunizieren)
 - Welche Antwort-Tonalität in Issue-Antworten (z.B. "freundlich-präzise, immer mit Quellen wenn HAP-Spec zitiert wird")
 
