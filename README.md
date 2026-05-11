@@ -1,8 +1,8 @@
-# @pellini/homebridge-fritz-platform
+# @pellebot/homebridge-fritz-platform
 
 > Wartungs-Fork von [`SeydX/homebridge-fritz-platform`](https://github.com/SeydX/homebridge-fritz-platform), modernisiert für **Homebridge 2.0** und **Node.js 22/24**. Fokus: AVM DECT-Geräte (Thermostate, Lampen, Sensoren). Original-Plugin wurde seit Juni 2022 nicht mehr gepflegt.
 
-[![npm version](https://img.shields.io/npm/v/@pellini/homebridge-fritz-platform/beta.svg?style=flat-square)](https://www.npmjs.com/package/@pellini/homebridge-fritz-platform)
+[![npm version](https://img.shields.io/npm/v/@pellebot/homebridge-fritz-platform/beta.svg?style=flat-square)](https://www.npmjs.com/package/@pellebot/homebridge-fritz-platform)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Homebridge](https://img.shields.io/badge/homebridge-2.0%20%7C%201.8%2B-purple?style=flat-square)](https://github.com/homebridge/homebridge)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024-green?style=flat-square)](https://nodejs.org/)
@@ -12,7 +12,7 @@
 Dieser Fork ist **als `beta`-Release auf npm verfügbar**. Er läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-Lampe und 2 Temperatursensoren auf Homebridge 2.0.2-beta + Node 24. **Noch nicht als `latest`-Tag auf npm** — installiere bewusst mit `@beta`.
 
 ```bash
-npm install -g @pellini/homebridge-fritz-platform@beta
+npm install -g @pellebot/homebridge-fritz-platform@beta
 ```
 
 ## Was dieser Fork kann
@@ -60,7 +60,7 @@ Wenn du eine dieser Funktionen brauchst, ist dieser Fork das falsche Plugin. Hie
 npm install -g homebridge@latest homebridge-config-ui-x@latest
 
 # Plugin installieren:
-npm install -g @pellini/homebridge-fritz-platform@beta
+npm install -g @pellebot/homebridge-fritz-platform@beta
 ```
 
 Anschließend Homebridge neu starten (z.B. via Config UI X "Restart"-Button).
@@ -120,7 +120,7 @@ Wenn du bisher das unmaintained Original (`homebridge-fritz-platform@6.0.19`) ei
 1. **Backup** dein `~/.homebridge/` Verzeichnis (`cp -R ~/.homebridge ~/.homebridge.backup`)
 2. **Update Homebridge auf 2.x**: `npm install -g homebridge@latest`
 3. **Original-Plugin entfernen**: `npm uninstall -g homebridge-fritz-platform`
-4. **Fork installieren**: `npm install -g @pellini/homebridge-fritz-platform@beta`
+4. **Fork installieren**: `npm install -g @pellebot/homebridge-fritz-platform@beta`
 5. **Config anpassen**: `hide: true` beim Router setzen, ggf. nicht-mehr-genutzte Subsysteme aus der Config entfernen (presence, callmonitor, etc. — werden eh ignoriert, aber sauberer wenn weg)
 6. **Homebridge neu starten**
 
@@ -131,7 +131,7 @@ Wenn du Accessory-UUIDs unverändert lässt (gleiche Device-Namen wie vorher), b
 Bevor du ein Issue öffnest, bitte:
 - Homebridge-Version (`homebridge --version`)
 - Node-Version (`node --version`)
-- Plugin-Version (`npm ls -g @pellini/homebridge-fritz-platform`)
+- Plugin-Version (`npm ls -g @pellebot/homebridge-fritz-platform`)
 - FritzBox-Modell + FRITZ!OS-Version
 - Relevante Log-Auszüge (idealerweise mit `"debug": true` in der Plugin-Config)
 - Config-Auszug (ohne Passwort!)

@@ -1,10 +1,10 @@
-# Roadmap — @pellini/homebridge-fritz-platform
+# Roadmap — @pellebot/homebridge-fritz-platform
 
 Ausgehend vom aktuellen Stand: ein funktionsfähiger HB-2.0-Minimal-Patch-Fork läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren. Code ist in `feat/hb2-minimal-patch` mit 9 Commits, noch nicht öffentlich gepublished.
 
 **Distribution-Modell:**
 - GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform-ng` (oder gewähltem Namen)
-- npm-Paket: **`@pellini/homebridge-fritz-platform`**, anfangs nur unter `beta`-Tag (technisch im Index, aber nicht als "latest" — frühe Nutzer brauchen explizit `@beta`)
+- npm-Paket: **`@pellebot/homebridge-fritz-platform`**, anfangs nur unter `beta`-Tag (technisch im Index, aber nicht als "latest" — frühe Nutzer brauchen explizit `@beta`)
 - Migration zu `latest`-Tag nach 2-4 Wochen produktiver Bestätigung
 
 Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bevor Phase 1+** an die Community geht.
@@ -54,10 +54,10 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 ### 0.5 npm-Publish-Setup
 
 - [ ] npm-Account-Setup, 2FA aktiviert
-- [ ] **Scope-Reservierung**: `@pellini/*` scope auf npm anlegen (kostenfrei für public packages)
+- [ ] **Scope-Reservierung**: `@pellebot/*` scope auf npm anlegen (kostenfrei für public packages)
 - [ ] `.npmignore` checken — keine `.git`, `node_modules`, Test-Configs, lokale Backups, `homebridge-fritz-platform-*.tgz`
 - [ ] Erstes Publish: `npm publish --tag beta --access public`
-- [ ] Verifikation: `npm install @pellini/homebridge-fritz-platform@beta` auf Test-System läuft
+- [ ] Verifikation: `npm install @pellebot/homebridge-fritz-platform@beta` auf Test-System läuft
 - [ ] Wichtig: NICHT mit `npm publish` (ohne `--tag beta`) — sonst wird `latest`-Tag gesetzt, was wir absichtlich vermeiden bis Burn-in durch ist
 
 ---

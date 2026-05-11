@@ -1,6 +1,6 @@
 # Changelog
 
-> **Hinweis zum Format:** Dieser Changelog setzt die Versionierung des Original-Plugins (`SeydX/homebridge-fritz-platform`, Maintainership eingestellt nach v6.0.19) fort. Ab `6.1.0-hb2patch.0` werden die Releases unter dem npm-Paket `@pellini/homebridge-fritz-platform` veröffentlicht.
+> **Hinweis zum Format:** Dieser Changelog setzt die Versionierung des Original-Plugins (`SeydX/homebridge-fritz-platform`, Maintainership eingestellt nach v6.0.19) fort. Ab `6.1.0-hb2patch.0` werden die Releases unter dem npm-Paket `@pellebot/homebridge-fritz-platform` veröffentlicht.
 
 # v6.1.0-hb2patch.0 — 2026-05-11 (Fork-Initial-Release, beta)
 
@@ -32,7 +32,7 @@ Wenn du von Upstream `homebridge-fritz-platform@6.0.19` upgradest:
 
 1. Backup deines `~/.homebridge/` Verzeichnisses
 2. `npm uninstall -g homebridge-fritz-platform`
-3. `npm install -g @pellini/homebridge-fritz-platform@beta`
+3. `npm install -g @pellebot/homebridge-fritz-platform@beta`
 4. Config: `hide: true` beim Router setzen, ggf. veraltete Subsystem-Einträge entfernen
 5. Homebridge auf 1.8.5+ oder 2.0+ upgraden, Node 22/24 sicherstellen
 6. Restart

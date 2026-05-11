@@ -1,5 +1,5 @@
 {
-  "name": "@pellini/homebridge-fritz-platform",
+  "name": "@pellebot/homebridge-fritz-platform",
   "version": "6.1.0-hb2patch.0",
   "description": "Homebridge plugin for AVM Fritz!DECT devices (thermostats, lightbulbs, sensors). Maintenance fork of SeydX/homebridge-fritz-platform, modernized for Homebridge 2.0 and Node 22/24.",
   "type": "module",

@@ -1,6 +1,6 @@
 # Contributing
 
-Vielen Dank dass du zu `@pellini/homebridge-fritz-platform` beitragen willst. Dieser Fork wird **LLM-unterstützt** gepflegt (siehe [`CONCEPT.md`](./CONCEPT.md)) — die Workflow-Erwartungen sind dadurch etwas anders als bei klassischen Open-Source-Projekten.
+Vielen Dank dass du zu `@pellebot/homebridge-fritz-platform` beitragen willst. Dieser Fork wird **LLM-unterstützt** gepflegt (siehe [`CONCEPT.md`](./CONCEPT.md)) — die Workflow-Erwartungen sind dadurch etwas anders als bei klassischen Open-Source-Projekten.
 
 ## Issues melden
 
@@ -14,7 +14,7 @@ Bevor du ein Issue öffnest, **bitte prüfe**:
 
 - **Homebridge-Version**: `homebridge --version`
 - **Node-Version**: `node --version`
-- **Plugin-Version**: `npm ls -g @pellini/homebridge-fritz-platform`
+- **Plugin-Version**: `npm ls -g @pellebot/homebridge-fritz-platform`
 - **FritzBox-Modell** + **FRITZ!OS-Version** (siehe FritzBox-UI → System → Übersicht)
 - **Konkretes Verhalten**: was hast du erwartet, was passiert stattdessen?
 - **Reproduktionsschritte**: wie kann ich (oder ein anderer Tester) das Problem nachstellen?

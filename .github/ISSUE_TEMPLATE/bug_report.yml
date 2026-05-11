@@ -34,7 +34,7 @@ body:
     id: plugin-version
     attributes:
       label: Plugin-Version
-      description: Output von `npm ls -g @pellini/homebridge-fritz-platform`
+      description: Output von `npm ls -g @pellebot/homebridge-fritz-platform`
       placeholder: "z.B. 6.1.0-hb2patch.0"
     validations:
       required: true

@@ -1,6 +1,6 @@
-# @pellini/homebridge-fritz-platform — LLM-co-maintained Open-Source-Projekt
+# @pellebot/homebridge-fritz-platform — LLM-co-maintained Open-Source-Projekt
 
-*GitHub-Repo public, npm-Release als beta unter `@pellini/homebridge-fritz-platform`.*
+*GitHub-Repo public, npm-Release als beta unter `@pellebot/homebridge-fritz-platform`.*
 
 ## Vision
 
@@ -40,7 +40,7 @@ Der LLM-Agent ist **kein Bot-Account auf GitHub**. Es gibt keine automatischen A
                           ▼
 ┌─────────────────────────────────────┐
 │  npm Registry                       │
-│  @pellini/homebridge-fritz-platform │
+│  @pellebot/homebridge-fritz-platform │
 │  Tag: `beta` (unlisted),            │
 │  später `latest` nach Burn-in       │
 └─────────────────────────────────────┘
