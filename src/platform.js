@@ -5,18 +5,16 @@ const { createPluginStorageDir, generateConfig } = require('./utils/utils');
 const { version } = require('../package.json');
 
 const Telegram = require('./lib/telegram');
-const Callmonitor = require('./lib/callmonitor');
 
-//Accessories
-const { CallmonitorAccessory, CallmonitorSetup } = require('./accessories/callmonitor/callmonitor');
-const { ChildLockAccessory, ChildLockSetup } = require('./accessories/childlock/childlock');
-const { ExtrasAccessory, ExtrasSetup } = require('./accessories/extras/extras');
-const { NetworkSetup } = require('./accessories/network/network');
-const {
-  PresenceMotionAccessory,
-  PresenceOccupancyAccessory,
-  PresenceSetup,
-} = require('./accessories/presence/presence');
+// Accessories — DECT-only Minimal-Patch-Fork.
+// Out-of-scope subsystems (callmonitor, presence, network, wol, childlock, extras)
+// are not wired in here. Their directories remain in src/accessories/ as dead code
+// — they are intentionally not deleted because router/router.accessory.js still has
+// a top-level require('../extras/extras.handler') that would fail at load time
+// otherwise. The router/ module itself is REQUIRED for FritzBox initialization:
+// RouterSetup creates the @seydx/fritzbox client that all smarthome accessories
+// depend on via meshMaster.fritzbox. Configure the master router with
+// "master: true, hide: true" to suppress the Router-Accessory itself.
 const { RouterAccessory, RouterSetup } = require('./accessories/router/router');
 const {
   SHBlindAccessory,
@@ -35,7 +33,6 @@ const {
   SHWindowSwitchAccessory,
   SHSetup,
 } = require('./accessories/smarthome/smarthome');
-const { WolAccessory, WolSetup } = require('./accessories/wol/wol');
 
 //Custom Types
 const CustomTypes = require('./types/custom.types');
@@ -94,31 +91,6 @@ function FritzPlatform(log, config, api) {
     SHSetup(this.devices, this.config.smarthome);
   }
 
-  if (this.config.presence || this.config.options.presence.guest) {
-    PresenceSetup(this.devices, this.config.presence, this.config.options.presence);
-  }
-
-  if (this.config.childLock) {
-    ChildLockSetup(this.devices, this.config.childLock);
-  }
-
-  if (this.config.wol) {
-    WolSetup(this.devices, this.config.wol);
-  }
-
-  if (this.config.network) {
-    NetworkSetup(this.config.network, this.meshMaster);
-  }
-
-  if (this.config.extras) {
-    ExtrasSetup(this.devices, this.config.extras, this.meshMaster);
-  }
-
-  if (this.config.callmonitor) {
-    CallmonitorSetup(this.devices, this.config.callmonitor);
-  }
-
-  this.api.on('shutdown', () => Callmonitor.stop());
   this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
 }
 
@@ -220,24 +192,6 @@ FritzPlatform.prototype = {
           new SHOutletLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         else if (device.subtype === 'smarthome-switch-lightbulb' && !device.energy)
           new SHSwitchLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster);
-        break;
-      case 'presence':
-        if (device.subtype === 'motion')
-          new PresenceMotionAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
-        else if (device.subtype === 'occupancy')
-          new PresenceOccupancyAccessory(this.api, accessory, this.accessories, this.meshMaster);
-        break;
-      case 'childlock':
-        new ChildLockAccessory(this.api, accessory, this.accessories, this.meshMaster);
-        break;
-      case 'wol':
-        new WolAccessory(this.api, accessory, this.accessories, this.meshMaster);
-        break;
-      case 'callmonitor':
-        new CallmonitorAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
-        break;
-      case 'extra':
-        new ExtrasAccessory(this.api, accessory, this.accessories, this.meshMaster);
         break;
       default:
         logger.warn(`Can not setup accessory, type (${device.type}) unknown!`, device.name);
