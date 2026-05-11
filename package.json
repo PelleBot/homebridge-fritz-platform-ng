@@ -11,10 +11,18 @@
     "type": "git",
     "url": "git+https://github.com/PelleBot/homebridge-fritz-platform-ng.git"
   },
-  "author": "PelleBot <pelle-bot@we-success.de>",
+  "author": {
+    "name": "PelleBot",
+    "email": "pelle-bot@we-success.de",
+    "url": "https://github.com/PelleBot"
+  },
   "contributors": [
     "Seyit Bayraktar <seydx@outlook.de> (original author, https://github.com/SeydX/homebridge-fritz-platform)"
   ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/PelleBot"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/PelleBot/homebridge-fritz-platform-ng/issues"
