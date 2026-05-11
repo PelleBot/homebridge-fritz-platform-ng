@@ -1,0 +1,4 @@
+{
+  "_comment": "Marks the entire src/ subtree as CommonJS. The root package.json sets type:module for the ESM entrypoint (index.mjs); this nested package.json scopes the legacy CJS code in src/ correctly. Do not delete.",
+  "type": "commonjs"
+}
