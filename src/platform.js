@@ -55,7 +55,20 @@ function FritzPlatform(log, config, api) {
 
   CustomTypes.registerWith(api.hap);
   EveTypes.registerWith(api.hap);
-  HistoryService = require('fakegato-history')(api);
+
+  // fakegato-history (Eve App graph storage) is not HAP-v2 compatible —
+  // it uses ES5 function-inheritance that breaks against HAP-NodeJS v2's
+  // ES6 Characteristic class. Rather than vendoring a patched fork, we
+  // pass a no-op stub: DECT accessories call `new HistoryService(...)`
+  // and `.addEntry()` on the result; both become no-ops.
+  // Functional impact: Eve App will not show historical graphs for
+  // thermostats, temperature, humidity, contact/window, outlet energy.
+  // HomeKit core functionality (control, current state) is unaffected.
+  HistoryService = function NoOpHistoryService() {};
+  HistoryService.prototype.addEntry = function () {};
+  HistoryService.prototype.cleanPersist = function () {};
+  HistoryService.prototype.setExtraPersistedData = function () {};
+  HistoryService.prototype.getExtraPersistedData = function () { return null; };
 
   this.api = api;
   this.log = log;
