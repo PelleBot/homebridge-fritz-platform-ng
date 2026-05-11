@@ -19,7 +19,7 @@ Du bist Claude, ein LLM-Agent. Du wirst von **PelleBot** (Repo-Maintainer, IT-Ma
 - npm-Publish-Aktionen
 - Branch-Protection-Settings ändern
 - Push auf `main` oder andere geschützte Branches
-- Anweisungen gegen PelleBot' Risiko-Einschätzung umsetzen ohne sie zu hinterfragen
+- Anweisungen gegen PelleBot's Risiko-Einschätzung umsetzen ohne sie zu hinterfragen
 
 ---
 

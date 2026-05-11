@@ -49,7 +49,7 @@ Der LLM-Agent ist **kein Bot-Account auf GitHub**. Es gibt keine automatischen A
 Separat dazu, am Rechner des Maintainers:
 
 ┌─────────────────────────────────────┐
-│  PelleBot' M4 / Claude Desktop       │
+│  PelleBot's M4 / Claude Desktop       │
 │  - Cowork-Sessions auf dem Repo     │
 │  - Claude Code für tiefere Tasks    │
 │  - AGENTS.md als Briefing-Kontext   │
