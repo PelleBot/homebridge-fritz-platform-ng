@@ -1,132 +1,160 @@
-<p align="center">
-    <img src="https://github.com/SeydX/homebridge-fritz-platform/blob/master/images/fb_logo.png" height="200">
-</p>
+# @pellini/homebridge-fritz-platform
 
-# homebridge-fritz-platform
+> Wartungs-Fork von [`SeydX/homebridge-fritz-platform`](https://github.com/SeydX/homebridge-fritz-platform), modernisiert für **Homebridge 2.0** und **Node.js 22/24**. Fokus: AVM DECT-Geräte (Thermostate, Lampen, Sensoren). Original-Plugin wurde seit Juni 2022 nicht mehr gepflegt.
 
-[![npm](https://img.shields.io/npm/v/homebridge-fritz-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-fritz-platform)
-[![npm](https://img.shields.io/npm/dt/homebridge-fritz-platform.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-fritz-platform)
-[![GitHub last commit](https://img.shields.io/github/last-commit/SeydX/homebridge-fritz-platform.svg?style=flat-square)](https://github.com/SeydX/homebridge-fritz-platform)
-[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
-[![Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/kqNCe2D)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NP4T3KASWQLD8)
+[![npm version](https://img.shields.io/npm/v/@pellini/homebridge-fritz-platform/beta.svg?style=flat-square)](https://www.npmjs.com/package/@pellini/homebridge-fritz-platform)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Homebridge](https://img.shields.io/badge/homebridge-2.0%20%7C%201.8%2B-purple?style=flat-square)](https://github.com/homebridge/homebridge)
+[![Node](https://img.shields.io/badge/node-22%20%7C%2024-green?style=flat-square)](https://nodejs.org/)
 
-**Creating and maintaining Homebridge plugins consume a lot of time and effort, if you would like to share your appreciation, feel free to "Star" or donate.** [Click here](https://github.com/SeydX) to review more of my plugins.
+## Status
 
-[Click here](https://github.com/SeydX) to review more of my plugins.
+Dieser Fork ist **als `beta`-Release auf npm verfügbar**. Er läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-Lampe und 2 Temperatursensoren auf Homebridge 2.0.2-beta + Node 24. **Noch nicht als `latest`-Tag auf npm** — installiere bewusst mit `@beta`.
 
+```bash
+npm install -g @pellini/homebridge-fritz-platform@beta
+```
 
-## Info
+## Was dieser Fork kann
 
-This plugin allows almost full control of **AVM** hardware like:
+Der Scope ist **bewusst kleiner** als das Original — wir konzentrieren uns auf das, was tatsächlich gepflegt und getestet wird:
 
-- **Fritz!Box**
-  - Router status and switch functionality,
-  - WLAN 2.4Ghz,
-  - WLAN 5Ghz, 
-  - WLAN Guest,
-  - WPS,
-  - DECT,
-  - Answering Machine,
-  - Deflection,
-  - Device LED,
-  - Device Lock,
-  - Ring Lock,
-  - Phonebook,
-  - Alarm,
-  - Wakeup,
-  - DNS Server
-  - Broadband
-  - Reconnect
-  - Child Lock
-  - Fallback Internet
-- **Fritz!Repeater**
-  - Repeater status and switch functionality,
-  - WLAN 2.4Ghz,
-  - WLAN 5Ghz,
-  - WLAN Guest,
-  - WPS,
-  - Device LED,
-  - Device Lock
-- **Fritz!Fon**
-  - Callmonitor (with adjustable filter for incoming/outgoing numbers),
-  - FakeGato support
-- **Fritz!DECT Buttons, Telekom Wandtaster**
-  - Support for buttons with 1/4 channels
-  - Temperature sensor with FakeGato,
-  - Humidity sensor with FakeGato,
-  - FakeGato support
-- **Fritz!DECT Outlets, Fritz!Powerline Outlets**
-  - Switch/Outlet status and switch functionality,
-  - Power meter,
-  - Temperature sensor with FakeGato,
-  - Telegram notification when device is in use/not in use
-  - FakeGato support
-- **Fritz!DECT Lights**
-  - Light status and switch functionality,
-  - Brightness adjustment,
-  - Color adjustment,
-  - Apple adaptive lighting
-- **Fritz!DECT Thermostats, Comet!DECT Thermostats**
-  - Thermostat current state, target state, current temperature and target temperature state and switch functionality,
-  - Temperature sensor,
-  - Humidity sensor with FakeGato,
-  - Window sensor (for window open functionality)
-  - Open Window detection (to trigger manually open window)
-  - FakeGato support
-- **Rollotron DECT 1213/Blind/Shutter**
-  - Position adjustment/status
-- **HAN-FUN sensors (e.g. Deutsche Telekom)**
-  - Contact state,
-  - FakeGato support
-- **Presence**
-  - Detect occupancy through wifi,
-  - Detect occupancy through guest wifi,
-  - Fakegato support
-- **Watch Network**
-  - Control devices if connected or disconnected from network
-- **Telegram**
-  - Receive custom messages for occupancy detection (presence), device detection (watch network), incoming/outgoing calls (callmonitor), alarm, router state and outlet usage
+- **FRITZ!DECT 301 / Comet DECT** (Heizkörper-Thermostate) — Soll-/Ist-Temperatur, Batterie-Status, Fenster-offen-Erkennung
+- **FRITZ!Smart Light 500 / FRITZ!DECT 500** (DECT-Lampen) — An/Aus, Helligkeit, Farbe
+- **FRITZ!Smart Control 440** (Temperatursensoren) — Temperatur, Batterie
+- **FRITZ!DECT 200 / 210** (schaltbare Steckdosen) — An/Aus + Energiemessung
+- **FRITZ!Smart Energy 250** (OBIS-Reader-Modus) — experimentell, eigener `accType: "energy-meter"`, Werte in Eve App sichtbar (Apple Home stock zeigt sie nicht)
 
-Any system capable of running [Homebridge](https://github.com/nfarina/homebridge/) can be used to run **homebridge-fritz-platform**. The only need is network access to the device or program in question.
+Über `TR-064` wird die FritzBox-Verbindung initialisiert (für AHA-API-Auth) — Router-Accessory selbst (WiFi-Toggles, DECT-Schalter, etc.) ist standardmäßig deaktiviert (`hide: true`). Wer die Router-Funktionen wirklich braucht, kann das in der Config aktivieren, sollte aber wissen dass der Code-Pfad weniger Test-Coverage hat als die DECT-Linie.
 
+## Was dieser Fork bewusst NICHT macht
 
-## Changelog
+Aus dem Original entfernt oder nicht migriert (siehe `CONCEPT.md` für Begründung):
 
-See the [changelog](https://github.com/SeydX/homebridge-fritz-platform/blob/master/CHANGELOG.md) for changes between versions of this package.
+- **Callmonitor** (Fritz!Fon-Anrufüberwachung) — entfernt
+- **Presence** (Wifi-Anwesenheits-Erkennung) — entfernt
+- **Network-Watcher** (Geräte-Online-Status im LAN) — entfernt
+- **Wake-on-LAN** — entfernt
+- **Child Lock** (Internet-Sperren für Geräte) — entfernt
+- **Extras** (DNS-Switch, Fallback-Internet, Phonebook etc.) — entfernt
+- **Telegram-Notifications** — entfernt
+- **`fakegato-history`** (Eve App History-Graphen) — als No-Op gestubbt, weil HAP-v2-inkompatibel
 
-**<u>NOTE:</u>** Updating from **< v5.x** to **>= v5.x** will crash your homebridge, please **REMOVE** the old version first and check also the new [example-config.json](https://github.com/SeydX/homebridge-fritz-platform/blob/master/example/example-config.json) !
+Wenn du eine dieser Funktionen brauchst, ist dieser Fork das falsche Plugin. Hier findest du Alternativen:
 
+- Original (unmaintained, läuft nicht auf HB 2.0): [`SeydX/homebridge-fritz-platform`](https://github.com/SeydX/homebridge-fritz-platform)
+- Modernes Callmonitor-Plugin: [`homebridge-callmonitor-display`](https://www.npmjs.com/search?q=homebridge%20callmonitor)
+- Presence-Erkennung: [`homebridge-people`](https://www.npmjs.com/package/homebridge-people)
 
+## Voraussetzungen
 
-## Documentation
+- **Homebridge** ≥ 1.8.5 oder ≥ 2.0.0
+- **Node.js** ≥ 22.12.0 oder ≥ 24.0.0
+- **FritzBox** mit aktiviertem **TR-064-Zugriff** + dediziertem User mit "Smart Home"-Berechtigung (FRITZ!OS 7.x oder neuer)
+- Optional: **homebridge-config-ui-x** für die Web-UI
 
-- [Supported HomeKit Apps](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/Apps.md)
-- [Tested Devices](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/Supported.md)
-- [Installation instruction](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/Installation.md)
-- [First Start](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/FirtStart.md)
-- [Configuring Callmonitor](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/Callmonitor.md)
-- <u>Examples</u>
-   * [Example config.json](https://github.com/SeydX/homebridge-fritz-platform/blob/master/example/example-config.json)
-   * [Multiple instances (for extended reboot)](https://github.com/SeydX/homebridge-fritz-platform/blob/master/example/MultipleInstances.md)
-   * [Telegram Notification instructions](https://github.com/SeydX/homebridge-fritz-platform/blob/master/docs/Telegram.md)
-- [Debugging](https://github.com/SeydX/homebridge-fritz-platform/blob/master/DEBUG.md)
+## Installation
 
+```bash
+# Wenn Homebridge selbst noch upgegradet wird:
+npm install -g homebridge@latest homebridge-config-ui-x@latest
 
+# Plugin installieren:
+npm install -g @pellini/homebridge-fritz-platform@beta
+```
 
-## Contributing
+Anschließend Homebridge neu starten (z.B. via Config UI X "Restart"-Button).
 
-You can contribute to this homebridge plugin in following ways:
+## Konfiguration
 
-- [Report issues](https://github.com/SeydX/homebridge-fritz-platform/issues) and help verify fixes as they are checked in.
-- Review the [source code changes](https://github.com/SeydX/homebridge-fritz-platform/pulls).
-- Contribute bug fixes.
-- Contribute changes to extend the capabilities
-- Pull requests are accepted.
+Minimal-Config (`~/.homebridge/config.json`):
 
-This Plugin uses modules from others, see [CONTRIBUTING](https://github.com/SeydX/homebridge-fritz-platform/blob/master/CONTRIBUTING.md) for credits.
+```json
+{
+  "platforms": [
+    {
+      "platform": "FritzPlatform",
+      "name": "FritzBox",
+      "devices": [
+        {
+          "active": true,
+          "name": "FritzBox",
+          "host": "192.168.178.1",
+          "username": "homebridge-user",
+          "password": "DEIN_TR064_PASSWORT",
+          "ssl": true,
+          "tr064": true,
+          "master": true,
+          "hide": true
+        }
+      ],
+      "smarthome": [
+        {
+          "active": true,
+          "name": "Bad-Thermostat",
+          "ain": "099950870710",
+          "accType": "thermostat",
+          "temperature": true,
+          "window": true,
+          "battery": true
+        }
+      ],
+      "options": {
+        "polling": {
+          "timer": 30
+        }
+      }
+    }
+  ]
+}
+```
 
+`hide: true` beim Router ist **wichtig** für diesen Fork — sonst versucht das Plugin Router-Wifi-Toggles anzulegen, deren Custom-Charakteristiken aktuell nicht ES6-portiert sind.
+
+Vollständige Config-Optionen werden über das **Homebridge Config UI X** Plugin grafisch unterstützt.
+
+## Migration vom Original-Plugin
+
+Wenn du bisher das unmaintained Original (`homebridge-fritz-platform@6.0.19`) eingesetzt hast und auf diesen Fork wechselst:
+
+1. **Backup** dein `~/.homebridge/` Verzeichnis (`cp -R ~/.homebridge ~/.homebridge.backup`)
+2. **Update Homebridge auf 2.x**: `npm install -g homebridge@latest`
+3. **Original-Plugin entfernen**: `npm uninstall -g homebridge-fritz-platform`
+4. **Fork installieren**: `npm install -g @pellini/homebridge-fritz-platform@beta`
+5. **Config anpassen**: `hide: true` beim Router setzen, ggf. nicht-mehr-genutzte Subsysteme aus der Config entfernen (presence, callmonitor, etc. — werden eh ignoriert, aber sauberer wenn weg)
+6. **Homebridge neu starten**
+
+Wenn du Accessory-UUIDs unverändert lässt (gleiche Device-Namen wie vorher), behält HomeKit das Pairing bei. Kein iPhone-Re-Pairing nötig.
+
+## Issues melden
+
+Bevor du ein Issue öffnest, bitte:
+- Homebridge-Version (`homebridge --version`)
+- Node-Version (`node --version`)
+- Plugin-Version (`npm ls -g @pellini/homebridge-fritz-platform`)
+- FritzBox-Modell + FRITZ!OS-Version
+- Relevante Log-Auszüge (idealerweise mit `"debug": true` in der Plugin-Config)
+- Config-Auszug (ohne Passwort!)
+
+Issue-Template im Repo führt dich durch alle Punkte.
+
+## Maintenance-Modell
+
+Dieser Fork wird **LLM-unterstützt** gepflegt (siehe [`CONCEPT.md`](./CONCEPT.md)). Konkret:
+
+- PelleBot ist menschlicher Maintainer, Repo-Owner, Final-Reviewer
+- Code-Patches, Doc-Updates und Issue-Antworten werden mit Hilfe eines LLM (Claude) entworfen
+- Jede Änderung wird vom menschlichen Maintainer geprüft, bevor sie committed wird
+- Es gibt **keine automatischen Bot-Antworten** auf Issues — Reaktionszeit kann daher etwas länger sein, dafür ist Qualität konsistent
+
+Wenn du Maintainer werden willst (vor allem für die hier rausgenommenen Subsysteme): Issues mit Label `discussion` öffnen, oder direkt Pull Requests stellen.
+
+## Credits & Lineage
+
+Dieser Fork basiert auf der hervorragenden Vorarbeit von **Seyit Bayraktar (SeydX)** und seinem [`homebridge-fritz-platform`](https://github.com/SeydX/homebridge-fritz-platform). Ohne die Code-Basis vom Original wäre dieser Fork in dieser Zeit nicht entstanden. Der Maintainer schätzt SeydX' Beitrag zur Homebridge-Community sehr.
+
+Lizenz: MIT (siehe [`LICENSE`](./LICENSE)). Beide Copyright-Halter (SeydX 2020, PelleBot 2026) sind dort aufgeführt.
 
 ## Disclaimer
 
-All product and company names are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.
+Alle Produkt- und Firmennamen (Fritz!Box®, AVM®, HomeKit™, etc.) sind Marken ihrer jeweiligen Eigentümer. Die Verwendung impliziert keine Affiliation oder Empfehlung. Dieses Plugin ist **kein offizielles AVM- oder Apple-Produkt**.

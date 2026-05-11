@@ -1,6 +1,6 @@
-# homebridge-fritz-platform-ng — LLM-managed Open-Source-Projekt
+# @pellini/homebridge-fritz-platform — LLM-co-maintained Open-Source-Projekt
 
-*"ng" = next generation. Arbeitsname; finaler npm-Paketname noch zu entscheiden.*
+*GitHub-Repo public, npm-Release als beta unter `@pellini/homebridge-fritz-platform`.*
 
 ## Vision
 
@@ -8,63 +8,89 @@ Ein **wartungsfähiges Comeback** des seit Juni 2022 verwaisten `seydx/homebridg
 
 Die Hypothese: Ein gut gewartetes Plugin braucht keine 40h pro Woche eines Voll-Maintainers. Es braucht **konsistente, schnelle, korrekte Reaktion** auf Issues und Code-Reviews. Das ist eine Aufgabe, für die ein LLM gut geeignet ist, wenn der Rahmen stimmt.
 
+**Wichtige Klarstellung zur Autonomie:** Der LLM-Agent arbeitet **nicht autonom**. Der Maintainer ist Operator und gibt jede Anweisung manuell — typischerweise via Claude Desktop / Cowork / Claude Code auf seinem eigenen Rechner. Der LLM produziert dann Files (Code, Docs, Issue-Antworten, PR-Reviews), die der Maintainer prüft und committed/postet. Es gibt **keine GitHub-Actions-Auto-Trigger** auf Claude, keinen Bot-Account der unaufgefordert in Issues kommentiert.
+
+Im Resultat: der LLM **verantwortet die Files im Repo** (Code-Qualität, Docs-Aktualität, Konsistenz), der Maintainer entscheidet was gemacht wird und wann.
+
 ## Rollen
 
 | Rolle | Verantwortung |
 |---|---|
-| **Maintainer (PelleBot, menschlich)** | Repo-Owner, Final-Sign-off für Merges + Releases, Eskalations-Instanz, npm-Publish-Credentials, Strategie-Entscheidungen, Tonalität gegenüber Community |
-| **LLM-Agent (Claude)** | First-Responder auf Issues, technische Triage, Reproducer-Versuche, Code-Patches als PRs, Code-Review für Community-PRs, Changelog-Entwürfe, Docs-Updates |
+| **Maintainer (PelleBot, menschlich)** | Repo-Owner, Operator (entscheidet was passiert), Kommunikation mit Community in Issues/PRs, npm-Publish-Credentials, Strategie, Final-Merge in `main`, Eskalations-Instanz |
+| **LLM-Agent (Claude, on-demand)** | Wird vom Maintainer manuell invoked (lokal via Cowork/Claude Code). Schreibt Code-Patches, Docs, Issue-Antworten, PR-Reviews als **Vorschläge** in lokale Files / Drafts. Maintainer reviewed + applied. Verantwortet **Konsistenz und Qualität der Files** im Repo. |
 | **Community-Contributors** | Bug-Reports, Feature-Requests, gelegentliche Pull-Requests, alle via GitHub Issues / PRs |
 
-Wichtig: Der LLM-Agent ist **kein Auto-Merger**. Jeder Merge in den `main`-Branch braucht explizite Maintainer-Approval. Der LLM produziert Vorschläge; der Maintainer entscheidet.
+Der LLM-Agent ist **kein Bot-Account auf GitHub**. Es gibt keine automatischen Antworten auf Issues. Die Community sieht den Maintainer als Ansprechpartner; intern nutzt der Maintainer Claude als Werkzeug zur Beschleunigung.
 
 ## Architektur
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  GitHub Repository: PelleBot/homebridge-fritz-platform-ng     │
-│  - main (protected, PR-only)                                 │
-│  - dev (integration branch, optional)                        │
-│  - feature/* branches                                        │
-└──────────────────────────────────────────────────────────────┘
-              │                              │
-              ▼                              ▼
-┌─────────────────────────┐    ┌──────────────────────────────┐
-│  GitHub Actions         │    │  Claude Agent                │
-│  - CI (lint+build+test) │◄──►│  - Issue-Triage              │
-│  - Auto-Label           │    │  - Reproducer-Versuche       │
-│  - Release-Publish      │    │  - PR-Entwürfe               │
-│    (manuell getriggert) │    │  - PR-Reviews                │
-└─────────────────────────┘    └──────────────────────────────┘
-              │                              │
-              ▼                              ▼
-┌─────────────────────────┐    ┌──────────────────────────────┐
-│  npm Registry           │    │  Maintainer (PelleBot)        │
-│  @PelleBot/...           │    │  - Approves Merges           │
-│  Versionierung:         │    │  - Triggers Releases         │
-│  Semver + Beta-Tags     │    │  - Eskalationen              │
-└─────────────────────────┘    └──────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  GitHub Repository: PelleBot/homebridge-fritz-platform          │
+│  (public, MIT, branch-protected main, PR-only)                 │
+└────────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────┐
+│  GitHub Actions (kein Claude!)      │
+│  - CI: lint + node --check + tests  │
+│  - Manuelles Release-Publish        │
+└─────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────┐
+│  npm Registry                       │
+│  @pellini/homebridge-fritz-platform │
+│  Tag: `beta` (unlisted),            │
+│  später `latest` nach Burn-in       │
+└─────────────────────────────────────┘
+
+
+Separat dazu, am Rechner des Maintainers:
+
+┌─────────────────────────────────────┐
+│  PelleBot' M4 / Claude Desktop       │
+│  - Cowork-Sessions auf dem Repo     │
+│  - Claude Code für tiefere Tasks    │
+│  - AGENTS.md als Briefing-Kontext   │
+└─────────────────────────────────────┘
+            │
+            │ User: "Read this issue, propose response"
+            │ User: "Write a fix for #42"
+            │ User: "Review PR #17 — security risks?"
+            ▼
+       Claude liefert Files / Texte
+            │
+            ▼
+   Maintainer reviewed + commited/posted
+            │
+            ▼
+       GitHub Repo / Issue-Antwort
 ```
 
-### Konkrete Integrationspunkte
+### Wann Claude eingesetzt wird
 
-**Claude wird in vier Situationen aktiv:**
+Vier typische Situationen, alle vom Maintainer initiiert:
 
-1. **Neues Issue** → GitHub Action ruft Claude → Claude liest Issue + `AGENTS.md` + Repo-State → schreibt strukturierte Antwort (Klärungs-Fragen, Label-Vorschläge, ggf. Reproducer)
-2. **Neuer PR** → GitHub Action ruft Claude → Claude liest Diff + Tests + relevante Code-Bereiche → schreibt Review (Findings, Risiko-Einschätzung, Approval/Request-Changes)
-3. **Maintainer-Command in Issue/PR-Kommentar** (z.B. `@claude please reproduce` oder `@claude propose a fix`) → Claude führt die spezifische Aktion aus
-4. **Wöchentlicher Triage-Lauf** (Cron) → Claude geht alle offenen Issues durch, eskaliert was wirklich Maintainer-Zeit braucht, schließt eindeutig-stale Issues nach 90 Tagen ohne Aktivität
+1. **Neues Issue** → Maintainer fragt Claude lokal: "Lies dieses Issue, schreib mir einen Vorschlag für die Antwort und welche Labels sinnvoll sind." → Claude liefert Antwort-Draft + Label-Vorschlag → Maintainer postet/labelt selbst auf GitHub.
+2. **Bug zu fixen** → Maintainer beschreibt Claude den Bug, gibt Reproducer-Logs → Claude schreibt Patch als lokalen Branch → Maintainer reviewed Diff, pushed selbst und öffnet PR.
+3. **PR von Contributor reviewen** → Maintainer wirft Diff in Claude-Session: "Sicherheits-Risiken? Stilkonflikte? Test-Coverage?" → Claude liefert strukturierte Review → Maintainer postet eigene Worte auf GitHub.
+4. **Release vorbereiten** → Maintainer fragt Claude: "Welche Commits seit Tag X? Schreib Changelog-Entry." → Claude generiert Changelog-Section → Maintainer fügt ein, taggt, publisht via Workflow.
 
-### CLAUDE.md / AGENTS.md im Repo
+In **keiner** dieser Situationen interagiert Claude direkt mit GitHub. Maintainer ist immer der mensch-sichtbare Akteur.
 
-Diese Datei (bzw. ihr Nachfolger nach Standardisierung) ist der **Primär-Kontext**, den Claude bei jedem Run liest. Inhalte:
+### AGENTS.md im Repo
 
-- Projekt-Scope (DECT-only? Volle Fritz-Abdeckung? Ist-Stand und Ziel-Stand)
-- Architektur-Übersicht (welche Files machen was)
-- Konventionen (Code-Style, Commit-Format, PR-Template)
-- Bekannte Fallstricke (z.B. "fakegato-history ist nicht HAP-v2-kompatibel, gestubbt")
-- Maintainer-Präferenzen (z.B. "lieber konservativ, kleinere PRs als große Refactors")
-- Was Claude **nicht** entscheiden darf ohne Maintainer-Approval
+Datei im Repo-Root, primär für **Claude-Sessions des Maintainers** (nicht für GitHub Actions). Inhalte:
+
+- Projekt-Scope (DECT-only, was bewusst rausfällt)
+- Architektur-Übersicht (welche Files machen was, Migration-Kontext von v6.0.19 → v6.1.x)
+- Konventionen (Code-Style, Commit-Format, Eve-Charakteristiken via String-Literalen)
+- Bekannte Fallstricke (z.B. "fakegato-history ist HAP-v2-inkompatibel, gestubbt; custom.types.js noch nicht ES6-portiert")
+- Maintainer-Präferenzen (lieber konservativ, kleinere PRs, ehrlich über Limitationen kommunizieren)
+- Welche Antwort-Tonalität in Issue-Antworten (z.B. "freundlich-präzise, immer mit Quellen wenn HAP-Spec zitiert wird")
+
+`AGENTS.md` ist im Repo öffentlich — andere LLM-Maintainer können das Pattern adoptieren. Die Datei dient gleichzeitig als Transparenz-Statement: "So wird dieses Projekt gewartet."
 
 ## Workflows (Patterns)
 
@@ -150,19 +176,16 @@ Was nur der **Maintainer (PelleBot)** darf:
 
 ## Kosten- und Aufwandsmodell
 
-**Erwarteter LLM-Kosten-Range** (Anthropic API, Claude Sonnet 4.6 als Default):
-- Pro Issue-Triage: ~$0.05-0.20
-- Pro PR-Review: ~$0.10-0.50 (abhängig von Diff-Größe)
-- Pro Bugfix-PR-Entwurf: ~$0.30-2.00 (abhängig von Komplexität)
-- Wöchentlicher Triage-Lauf über alle offenen Issues: ~$1-5
+Da Claude **on-demand vom Maintainer** invoked wird (kein GitHub-Action-Auto-Trigger), fällt die LLM-Cost in die regulären Claude-Subscription / API-Calls des Maintainers. Es gibt **keine separaten Projekt-Kosten** für den LLM-Einsatz.
 
-Bei ~10 Issues/Monat + ~5 PRs/Monat + wöchentlichem Triage: **~$20-50/Monat** als Rohschätzung. Maintainer-Zeit zusätzlich: ~2-4h/Monat für Reviews + Releases.
+**Realistische Maintainer-Zeit-Schätzung:**
+- ~30-60 min pro neues Issue (lesen, Claude-Session, antworten, ggf. Label)
+- ~60-120 min pro Bugfix (Reproduzieren, Claude-Session für Patch, Review, PR öffnen + mergen)
+- ~30 min pro Release (Changelog generieren mit Claude, npm-Publish triggern, Announcement)
 
-**Bei Aktivitäts-Spitzen** (z.B. Release-Welle, neue HB-Version mit Breaking Change): temporär ggf. 2-5x höher.
+Bei moderater Aktivität (~10 Issues/Monat, ~4 PRs/Monat, ~1 Release/Monat): **~10-15h Maintainer-Zeit pro Monat**.
 
-**Alternative Modelle:**
-- **Claude Max Subscription** ($100-200/Monat): unlimitierter LLM-Einsatz, gut wenn Aktivität schwankt
-- **Self-hosted Open-Source-LLM**: keine API-Kosten, aber höhere Hardware- + Komplexitäts-Kosten — für ein Hobby-OSS-Projekt nicht lohnend
+Wenn diese Zeit ohne LLM-Unterstützung kommt: realistisch eher 25-40h/Monat. Der LLM-Boost spart also signifikant — ohne dass Cost-/Compliance-Risiken durch Auto-Bots entstehen.
 
 ## Definition of "Productive Version"
 

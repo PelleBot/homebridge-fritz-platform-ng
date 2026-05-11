@@ -1,6 +1,11 @@
-# Roadmap — homebridge-fritz-platform-ng
+# Roadmap — @pellini/homebridge-fritz-platform
 
-Ausgehend vom aktuellen Stand: ein funktionsfähiger HB-2.0-Minimal-Patch-Fork läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren. Code ist in `feat/hb2-minimal-patch` mit 8 Commits, noch nicht öffentlich gepublished.
+Ausgehend vom aktuellen Stand: ein funktionsfähiger HB-2.0-Minimal-Patch-Fork läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren. Code ist in `feat/hb2-minimal-patch` mit 9 Commits, noch nicht öffentlich gepublished.
+
+**Distribution-Modell:**
+- GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform` (oder gewähltem Namen)
+- npm-Paket: **`@pellini/homebridge-fritz-platform`**, anfangs nur unter `beta`-Tag (technisch im Index, aber nicht als "latest" — frühe Nutzer brauchen explizit `@beta`)
+- Migration zu `latest`-Tag nach 2-4 Wochen produktiver Bestätigung
 
 Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bevor Phase 1+** an die Community geht.
 
@@ -27,31 +32,33 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 - [ ] GitHub Actions Workflow `release.yml` (manueller Trigger):
   - Erstellt Tag, Changelog-Entry, publisht auf npm mit konfigurierbarem Tag (`latest`/`beta`/`next`)
 
-### 0.3 LLM-Agent-Integration
+### 0.3 LLM-Briefing-File
 
-- [ ] `AGENTS.md` ins Repo-Root (Nachfolger der aktuellen CLAUDE.md, erweitert um Issue/PR-spezifische Anweisungen)
-- [ ] GitHub Action `claude-on-issue.yml` — triggert auf neue Issues, ruft Claude API mit Issue-Body + AGENTS.md
-- [ ] GitHub Action `claude-on-pr.yml` — triggert auf neue PRs, ruft Claude für Review
-- [ ] GitHub Action `claude-mention.yml` — triggert auf Kommentare mit `@claude`
-- [ ] Anthropic API Token als GitHub Secret hinterlegen
-- [ ] Rate-Limit + Cost-Cap konfigurieren (z.B. max $5/Tag)
+**Kein GitHub-Auto-Trigger** in dieser Variante — Claude wird vom Maintainer manuell invoked (Cowork-Session lokal). Stattdessen brauchen wir nur den Briefing-Kontext im Repo:
 
-### 0.4 Docs & Templates
+- [x] `AGENTS.md` ins Repo-Root — Operating-Manual für Claude-Sessions (Scope, Konventionen, Fallstricke, Tonalität)
+- [x] `CONCEPT.md` mit dem Solo-Maintainer-+-LLM-Modell beschrieben (kein Bot-Account)
+- [x] `CLAUDE.md` als historisches Migration-Briefing erhalten (kann später in `docs/archive/` verschoben werden)
 
-- [ ] **README.md** komplett neu: Was kann das Plugin, was nicht, Installation, Minimal-Config, Link zu CONCEPT.md
-- [ ] **CHANGELOG.md** initial: Migration-Notes von Upstream v6.0.19 + Liste der Patch-Commits
-- [ ] **CONTRIBUTING.md**: Wie man Bugs reportet, was im Reproducer drinstehen muss, dass LLM-Agent zuerst antwortet
-- [ ] **.github/ISSUE_TEMPLATE/bug_report.md** — strukturiert mit HB-Version, Node-Version, Plugin-Version, Config-Auszug, Log-Auszug, FritzBox-Modell + FW
-- [ ] **.github/ISSUE_TEMPLATE/feature_request.md** — Use-Case, Alternativen, ist es DECT/Router/etc.
-- [ ] **.github/PULL_REQUEST_TEMPLATE.md** — Beschreibung, Tests, Breaking-Changes-Checkbox
+### 0.4 Docs & Templates (alle ✓ erstellt)
+
+- [x] **README.md** komplett neu mit Scope, Migration-Hinweis, SeydX-Attribution, Lizenz-Erklärung
+- [x] **CHANGELOG.md** mit v6.1.0-hb2patch.0 Release-Notes, historischer Original-Changelog erhalten
+- [x] **CONTRIBUTING.md** mit Workflow, Konventionen, Out-of-Scope-Hinweisen
+- [x] **LICENSE** mit Dual-Copyright (SeydX 2020 + PelleBot 2026), MIT unverändert
+- [x] **.github/ISSUE_TEMPLATE/bug_report.yml** — strukturiertes Formular
+- [x] **.github/ISSUE_TEMPLATE/feature_request.yml** — strukturiertes Formular
+- [x] **.github/PULL_REQUEST_TEMPLATE.md** — PR-Checkliste
+- [x] **.github/workflows/ci.yml** — Lint + Syntax + Plugin-Load auf Node 22 und 24
 
 ### 0.5 npm-Publish-Setup
 
 - [ ] npm-Account-Setup, 2FA aktiviert
-- [ ] Paket-Namen reserviert auf npm
-- [ ] `.npmignore` checken — keine `.git`, `node_modules`, Test-Configs, lokale Backups
-- [ ] Erstes Publish manuell als `beta`-Tag: `npm publish --tag beta`
-- [ ] Verifikation: `npm install homebridge-fritz-platform-ng@beta` funktioniert auf Test-System
+- [ ] **Scope-Reservierung**: `@pellini/*` scope auf npm anlegen (kostenfrei für public packages)
+- [ ] `.npmignore` checken — keine `.git`, `node_modules`, Test-Configs, lokale Backups, `homebridge-fritz-platform-*.tgz`
+- [ ] Erstes Publish: `npm publish --tag beta --access public`
+- [ ] Verifikation: `npm install @pellini/homebridge-fritz-platform@beta` auf Test-System läuft
+- [ ] Wichtig: NICHT mit `npm publish` (ohne `--tag beta`) — sonst wird `latest`-Tag gesetzt, was wir absichtlich vermeiden bis Burn-in durch ist
 
 ---
 

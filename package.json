@@ -1,48 +1,38 @@
 {
-  "name": "homebridge-fritz-platform",
+  "name": "@pellini/homebridge-fritz-platform",
   "version": "6.1.0-hb2patch.0",
-  "description": "Homebridge Plugin to control FritzBox router, smarthome devices and more. HB 2.0 minimal-patch fork (DECT-only).",
+  "description": "Homebridge plugin for AVM Fritz!DECT devices (thermostats, lightbulbs, sensors). Maintenance fork of SeydX/homebridge-fritz-platform, modernized for Homebridge 2.0 and Node 22/24.",
   "type": "module",
   "main": "index.mjs",
-  "funding": [
-    {
-      "type": "paypal",
-      "url": "https://paypal.me/seydx"
-    },
-    {
-      "type": "kofi",
-      "url": "https://ko-fi.com/seydx"
-    },
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/seydx"
-    }
-  ],
   "scripts": {
     "lint": "eslint --fix ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SeydX/homebridge-fritz-platform.git"
+    "url": "git+https://github.com/PelleBot/homebridge-fritz-platform.git"
   },
-  "author": "SeydX (https://github.com/SeydX/homebridge-fritz-platform)",
+  "author": "PelleBot <pelle-bot@we-success.de>",
+  "contributors": [
+    "Seyit Bayraktar <seydx@outlook.de> (original author, https://github.com/SeydX/homebridge-fritz-platform)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/SeydX/homebridge-fritz-platform/issues"
+    "url": "https://github.com/PelleBot/homebridge-fritz-platform/issues"
   },
-  "homepage": "https://github.com/SeydX/homebridge-fritz-platform#readme",
+  "homepage": "https://github.com/PelleBot/homebridge-fritz-platform#readme",
   "keywords": [
     "fritz",
     "fritzbox",
     "homebridge",
     "homebridge-plugin",
     "plugin",
-    "presence",
     "dect",
     "smarthome",
     "tr064",
     "avm",
-    "callmonitor"
+    "thermostat",
+    "fritz-dect",
+    "homebridge-2"
   ],
   "engines": {
     "node": "^22.12.0 || ^24.0.0",

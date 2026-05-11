@@ -1,0 +1,125 @@
+name: Bug Report
+description: Ein konkretes Problem mit dem Plugin (Crash, falsche Werte, Verhalten unerwartet)
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke, dass du dir die Zeit nimmst, einen Bug zu melden.
+
+        **Bitte ZUERST prüfen:**
+        - Gibt es bereits ein offenes oder geschlossenes Issue dazu? (Suche oben in Issues)
+        - Betrifft es Subsysteme die in diesem Fork **nicht enthalten** sind (Callmonitor, Presence, Network-Watcher, WoL, Childlock, Telegram)? → siehe README "Was dieser Fork NICHT macht"
+
+  - type: input
+    id: hb-version
+    attributes:
+      label: Homebridge-Version
+      description: Output von `homebridge --version`
+      placeholder: "z.B. 2.0.2-beta.10"
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js-Version
+      description: Output von `node --version`
+      placeholder: "z.B. v24.15.0"
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin-Version
+      description: Output von `npm ls -g @pellini/homebridge-fritz-platform`
+      placeholder: "z.B. 6.1.0-hb2patch.0"
+    validations:
+      required: true
+
+  - type: input
+    id: fritzbox-model
+    attributes:
+      label: FritzBox-Modell + FRITZ!OS
+      description: Steht in der FritzBox-UI unter System → Übersicht
+      placeholder: "z.B. FRITZ!Box 7590, FRITZ!OS 7.59"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device-types
+    attributes:
+      label: Betroffene Gerätetypen
+      multiple: true
+      options:
+        - DECT-Thermostat (FRITZ!DECT 301 / Comet DECT)
+        - DECT-Lampe (FRITZ!Smart Light 500 / FRITZ!DECT 500)
+        - DECT-Temperatursensor (FRITZ!Smart Control 440)
+        - DECT-Steckdose (FRITZ!DECT 200 / 210)
+        - Fritz!Smart Energy 250 (Energy-Meter)
+        - Router-Accessory (Wifi-Toggles etc.)
+        - Plugin-Initialisierung / Crash beim Start
+        - Anderes
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      placeholder: "Was sollte passieren?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+      placeholder: "Was passiert stattdessen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduktionsschritte
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevante Logs
+      description: |
+        Bitte mit `"debug": true` in der Plugin-Config, **nur die relevanten Zeilen** rund um den Fehler.
+        Logs gerne als Code-Block (` ``` `).
+        **Passwort, PIN, FritzBox-IP nicht mit posten!**
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Plugin-Config-Auszug
+      description: |
+        Die relevante Sektion aus `~/.homebridge/config.json`, **OHNE Passwort**.
+      render: json
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Bestätigung
+      options:
+        - label: Ich habe geprüft, dass mein Issue noch nicht offen oder gelöst ist.
+          required: true
+        - label: Ich habe Passwort/PIN/sensible Daten aus Logs und Config entfernt.
+          required: true
+        - label: Das betroffene Gerätesystem ist im Scope dieses Forks (siehe README).
+          required: true

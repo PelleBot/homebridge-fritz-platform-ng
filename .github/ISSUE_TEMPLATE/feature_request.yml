@@ -1,0 +1,61 @@
+name: Feature Request
+description: Vorschlag für eine neue Funktion oder Verbesserung
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deinen Vorschlag.
+
+        **Bitte ZUERST prüfen:** Liegt das Feature im Scope dieses Forks?
+        - **In Scope**: DECT-Geräte (Thermostate, Lampen, Sensoren, Steckdosen), FritzBox-AHA-API-Erweiterungen
+        - **NICHT in Scope** (siehe README): Callmonitor, Presence, Network-Watcher, WoL, Childlock, Telegram-Notifications, Multi-FritzBox-Setups, Zigbee/Z-Wave
+
+        Feature-Requests außerhalb des Scopes werden mit Hinweis auf Alternativen geschlossen.
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Was möchtest du erreichen, und warum ist es nützlich?
+      placeholder: "Ich habe XYZ-Hardware und will damit ABC tun, weil..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Vorgeschlagene Umsetzung
+      description: Wie könnte das technisch aussehen? (Config-Erweiterung? Neuer accType? UI-Änderung?)
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen
+      description: Gibt es andere Plugins / Workarounds, die das Problem heute schon lösen?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope-check
+    attributes:
+      label: Liegt der Vorschlag im Scope des Forks?
+      options:
+        - "Ja, betrifft DECT oder Plugin-Kern"
+        - "Bin mir unsicher"
+        - "Ich weiß, es ist out-of-scope, aber..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Bestätigung
+      options:
+        - label: Ich habe geprüft, dass kein ähnliches Feature-Request offen oder umgesetzt ist.
+          required: true
+        - label: Ich verstehe, dass der Maintainer im Solo-Modell wartet — Implementierung kann dauern.
+          required: true

@@ -1,5 +1,50 @@
 # Changelog
 
+> **Hinweis zum Format:** Dieser Changelog setzt die Versionierung des Original-Plugins (`SeydX/homebridge-fritz-platform`, Maintainership eingestellt nach v6.0.19) fort. Ab `6.1.0-hb2patch.0` werden die Releases unter dem npm-Paket `@pellini/homebridge-fritz-platform` veröffentlicht.
+
+# v6.1.0-hb2patch.0 — 2026-05-11 (Fork-Initial-Release, beta)
+
+**Erste Version des Wartungs-Forks.** Migrationspatch für Homebridge 2.0 + Node 22/24, basierend auf `SeydX/homebridge-fritz-platform@6.0.19` (letzte gepublishte Upstream-Version).
+
+## Breaking Changes ggü. v6.0.19
+
+- **Subsysteme entfernt** (siehe README für Begründung): callmonitor, presence, network, wol, childlock, extras (DNS, alarm, wakeup, ringlock, phoneBook, fallbackInternet). Config-Einträge für diese Subsysteme werden ignoriert.
+- **`fakegato-history` als No-Op gestubbt** — Eve-App-History-Graphen funktionieren nicht (kein HAP-v2-kompatibler Fork verfügbar). Live-Werte unverändert sichtbar.
+- **Router-Accessory standardmäßig versteckt empfohlen** (`hide: true`). Die Custom-Charakteristiken für WiFi/DECT/WPS-Toggles sind aktuell nicht ES6-portiert; bei `hide: false` und konfigurierten Router-Options crasht der Child-Bridge-Start. Geplant für nächstes Release.
+- **Node-Mindestversion auf ≥22.12** angehoben. Node 14/16/18/20 nicht mehr supportet.
+- **Homebridge ≥1.6 oder ≥2.0** als Engines-Range. HB 1.6/1.7 noch akzeptiert, getestet ist primär HB 1.8.5+ und HB 2.0.x.
+
+## Neuerungen
+
+- **HAP-NodeJS v2 Migration**: `BatteryService` → `Battery` Service (43 Stellen in 9 DECT-Files), `eve.types.js` von ES5-Function-Inheritance auf ES6-Klassen portiert mit String-Literal-basierten Format-/Perm-/Unit-Werten (HAP-Spec-konform, version-stabil).
+- **ESM-Entrypoint** (`index.mjs`) via `createRequire`, internes `src/`-CommonJS-Tree unverändert (Minimal-Patch-Prinzip). `src/package.json` mit `type: commonjs` für korrektes Module-Scoping.
+- **Neuer `accType: "energy-meter"`** (experimentell) für AVM Fritz!Smart Energy 250 im OBIS-Reader-Modus. Liest Sub-AINs `<base>-1` (OBIS 1.8 Bezug) und `<base>-2` (OBIS 2.8 Einspeisung), exponiert `CurrentConsumption` (W) und `TotalConsumption` (kWh) als Eve-Charakteristiken auf einem read-only Outlet-Service. Apple Home stock zeigt nur Plug-Tile; Werte in Eve App sichtbar.
+
+## Bekannte Limitationen
+
+- **Router-Toggles deaktiviert**: WiFi 2.4/5GHz/Guest, WPS, DECT, AW, Reconnect, Download/Upload/Ping-Charakteristiken sind im aktuellen Release nicht funktional. Workaround: `hide: true` auf Router-Config setzen. Behebung in nächstem Release durch ES6-Port von `custom.types.js`.
+- **Apple Home Energy-Display fehlt**: Apple HomeKit hat keine native "Power Meter"-Service-Klasse. Energy-Meter-Werte nur in Eve App sichtbar.
+- **fakegato-history Stub**: keine historischen Eve-App-Graphen. Live-Werte funktionieren.
+
+## Migration-Hinweise
+
+Wenn du von Upstream `homebridge-fritz-platform@6.0.19` upgradest:
+
+1. Backup deines `~/.homebridge/` Verzeichnisses
+2. `npm uninstall -g homebridge-fritz-platform`
+3. `npm install -g @pellini/homebridge-fritz-platform@beta`
+4. Config: `hide: true` beim Router setzen, ggf. veraltete Subsystem-Einträge entfernen
+5. Homebridge auf 1.8.5+ oder 2.0+ upgraden, Node 22/24 sicherstellen
+6. Restart
+
+Bei Beibehaltung der Device-Namen bleiben Accessory-UUIDs identisch — kein iPhone-Re-Pairing nötig.
+
+---
+
+# Historischer Changelog (Original-Plugin von SeydX)
+
+Die folgenden Einträge stammen aus dem Upstream-Repo `SeydX/homebridge-fritz-platform`, eingestellt nach v6.0.19. Aus Transparenz und Nachvollziehbarkeit unverändert hier erhalten.
+
 # v6.0.18 - 2021-10-06
 
 ## Bugfixes

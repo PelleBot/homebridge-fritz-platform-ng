@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  syntax-and-load:
+    name: Syntax + Plugin-Load (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Syntax check on all src/*.js files
+        run: |
+          fail=0
+          for f in $(find src index.mjs -name "*.js" -o -name "*.mjs"); do
+            if ! node --check "$f" 2>&1; then
+              echo "❌ Syntax error in $f"
+              fail=$((fail+1))
+            fi
+          done
+          if [ $fail -gt 0 ]; then
+            exit 1
+          fi
+          echo "✓ All syntax checks passed"
+
+      - name: CJS load test (src/platform.js)
+        run: |
+          node -e "const p = require('./src/platform.js'); console.log('CJS load OK, type:', typeof p); if (typeof p !== 'function') process.exit(1);"
+
+      - name: ESM entrypoint load test (index.mjs)
+        run: |
+          node --input-type=module -e "
+          import('./index.mjs').then(m => {
+            if (typeof m.default !== 'function') {
+              console.error('FAIL: index.mjs default export is not a function');
+              process.exit(1);
+            }
+            console.log('ESM entrypoint OK, default export type:', typeof m.default);
+          }).catch(e => {
+            console.error('FAIL:', e.message);
+            process.exit(1);
+          });
+          "
+
+      - name: Mock-Homebridge registration test
+        run: |
+          node --input-type=module -e "
+          import('./index.mjs').then(m => {
+            const mockHomebridge = {
+              platformAccessory: function MockAccessory() {},
+              hap: {
+                Service: new Proxy({}, { get: (t,k) => function() { return { setCharacteristic: () => {}, addCharacteristic: () => {}, getCharacteristic: () => ({ on: () => {}, onGet: () => {}, onSet: () => {} }) }; } }),
+                Characteristic: new Proxy({}, { get: (t,k) => { const f = function(){}; return f; } }),
+                uuid: { generate: (s) => 'uuid-' + s }
+              },
+              registerPlatform: (pluginName, platformName, ctor, dynamic) => {
+                if (typeof ctor !== 'function') { console.error('FAIL: registerPlatform got non-function ctor'); process.exit(1); }
+                console.log('✓ registerPlatform called with', pluginName, platformName);
+              }
+            };
+            try {
+              m.default(mockHomebridge);
+              console.log('✓ Full plugin registration OK');
+            } catch (e) {
+              console.error('FAIL:', e.message);
+              console.error(e.stack);
+              process.exit(1);
+            }
+          }).catch(e => { console.error('IMPORT FAIL:', e.message); process.exit(1); });
+          "
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true  # eslint config ist alt, viele Warnings — strict-erst nach Cleanup
