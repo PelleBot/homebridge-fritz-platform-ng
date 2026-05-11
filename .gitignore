@@ -60,3 +60,18 @@ typings/
 test/
 test.js
 .DS_Store
+
+# Local-only files — Maintainer-Notizen, niemals ins Public-Repo
+CLAUDE.md
+docs/archive/
+docs/private/
+*.local.md
+*.private.md
+*.secret
+
+# Lokale Config-Files mit Credentials (für Plugin-Dev-Setup auf eigener Maschine)
+.homebridge-test/
+homebridge-test/
+config.local.json
+*.config.local
+

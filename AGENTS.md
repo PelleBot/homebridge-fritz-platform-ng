@@ -1,6 +1,6 @@
 # AGENTS.md — Operating-Manual für LLM-Sessions
 
-> Diese Datei ist der **Primärkontext** für jede LLM-Session am Code dieses Projekts. Lies sie vollständig bevor du Code schreibst, Docs änderst, Issues beantwortest oder PRs reviewst. Der historische Kontext der initialen Migration steht in [`docs/archive/CLAUDE-migration-briefing.md`](./docs/archive/CLAUDE-migration-briefing.md); diese Datei hier ist für die **laufende Wartung**.
+> Diese Datei ist der **Primärkontext** für jede LLM-Session am Code dieses Projekts. Lies sie vollständig bevor du Code schreibst, Docs änderst, Issues beantwortest oder PRs reviewst. Sie ist als laufendes Wartungs-Briefing geschrieben; der Migrations-Hintergrund (April/Mai 2026) ist in `CHANGELOG.md` zusammengefasst.
 
 ---
 
