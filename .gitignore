@@ -77,3 +77,4 @@ config.local.json
 
 .commit-msg-*.txt
 .tag-msg-*.txt
+package-lock.json
