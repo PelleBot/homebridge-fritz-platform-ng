@@ -15,6 +15,8 @@
 
 Production: läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-Lampe, 2 Temperatursensoren, einem FRITZ!Smart Energy 250 OBIS-Reader an einem ISKRA-Stromzähler, sowie aktiven Router-Switches für Gast-WLAN und WPS — alles auf Homebridge 2.0.2 + Node 24 + FRITZ!OS 8.x.
 
+**Seit v1.1.0:** Setup-Wizard in Config UI X — beim ersten Plugin-Settings-Aufruf führt ein 5-Schritt-Assistent durch FritzBox-Verbindung, Geräte-Auswahl, Smart Energy 250, Router-Switches und Speichern. Auto-Discovery aller DECT-Geräte mit accType-Vorschlag pro Gerät.
+
 ## Unterstützte Geräte
 
 | Gerätetyp | accType | Was wird in HomeKit angezeigt |

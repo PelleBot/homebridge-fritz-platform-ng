@@ -2,6 +2,33 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.1.0 — 2026-05-13 (Setup-Wizard Release)
+
+**Neue Custom-UI mit Setup-Wizard.** Config UI X öffnet beim Klick auf das Plugin-Settings-Icon ab dieser Version unseren geführten 5-Schritt-Wizard statt des bisherigen JSON-Schema-Formulars. Das macht das Erstsetup deutlich freundlicher — kein Raten mehr bei Feldern wie `accType`, `obisChannel` oder AIN-Format.
+
+## Neuerungen
+
+- **`homebridge-ui/server.js` + `homebridge-ui/public/index.html`** — neuer Custom-UI-Server-Prozess der bei Plugin-Settings-Aufruf gestartet wird. Kommuniziert per IPC mit dem Config UI X Frontend.
+- **5-Schritt-Wizard:**
+  - **Schritt 1 — FritzBox-Verbindung:** Form mit Host/Port/SSL/TR-064/User/Passwort + "Verbindung testen"-Button. Backend ruft TR-064 + AHA-API live an, gibt actionable Hints bei Fehlern (ECONNREFUSED → "TR-064 aktivieren", 401 → "Smart Home Berechtigung fehlt", etc.).
+  - **Schritt 2 — Geräte-Auswahl:** Auto-Discovery aller DECT-Geräte. Pro Gerät wird der `accType` anhand der von `@seydx/fritzbox` normalisierten Feldern (`.thermostat`, `.light`, `.switch`, `.powermeter`, `.temperature`, `.button`, `.blind`, `.alert`) automatisch vorgeschlagen. Nutzer kann pro Gerät einzeln overriden.
+  - **Schritt 3 — Smart Energy 250 OBIS-Reader:** OBIS-Sub-AINs aus Schritt 2 werden nach Base-AIN gruppiert. Pro Reader werden 4 HomeKit-Tiles auto-vorgeschlagen (Aktueller Verbrauch + Gesamt Verbrauch + Aktuelle Einspeisung + Gesamt Einspeisung mit anpassbaren Namen).
+  - **Schritt 4 — Router-Switches:** Checkboxen für Gast-WLAN, WPS, WLAN 2.4/5 GHz, DECT-Basis, AB, Rufumleitung, Reconnect. Vorausgewählt aus bestehender Config wenn vorhanden.
+  - **Schritt 5 — Speichern + Apply:** Zusammenfassung, JSON-Vorschau mit maskiertem Passwort, Save via `homebridge.updatePluginConfig` + `homebridge.savePluginConfig`, Restart-Homebridge-Button.
+- **Auto-Pre-fill aus bestehender Config:** Verbindungs-Schritt und Router-Switches lesen die aktuelle Config beim Öffnen und füllen Formularfelder/Checkboxen vor. Make-it-easy bei Migration und beim Editieren.
+- **AIN-Suffix-Detection:** OBIS-Sub-AIN-Erkennung (`-1`/`-2`) korrekt priorisiert nach physischen Features — DECT 500 Lampen werden nicht mehr fälschlich als OBIS-Reader interpretiert (HAN-FUN-Sub-Unit mit `-1`-Suffix aber `.light`-Objekt).
+
+## Breaking Changes
+
+Keine. Bestehende Configs werden unverändert übernommen, das alte JSON-Schema-Form ist über den "Save"-Button (bottom-right) im Config UI X immer noch als Fallback erreichbar.
+
+## Bekannte Limitationen
+
+- **Standalone Config UI X:** `homebridge.savePluginConfig()` kann in Standalone-Modus die WebSocket-ACK nicht empfangen → wir racen den Save mit einem 3-Sek-Timeout. Datei wird trotzdem korrekt geschrieben.
+- **Custom-UI-Icon:** wird im Config UI X Plugin-Tile erst nach Homebridge-Verified-Plugin-Approval angezeigt (Repo `homebridge/plugins`-Icons-Liste). Bis dahin Default-Lila-Homebridge-Icon.
+
+---
+
 # v1.0.0 — 2026-05-13 (First Production Release)
 
 **Erstes stabiles Release** des `@pellebot/homebridge-fritz-platform-hb2`. Setzt die Code-Linie der `6.1.0-hb2patch.x` Pre-Releases fort, jetzt mit unabhängiger Versionierung und neuem npm-Paketnamen.
