@@ -66,3 +66,31 @@ example-config.json
 docs
 cmd
 test.js
+
+# Maintainer-internal docs (not for end-users)
+AGENTS.md
+CONCEPT.md
+ROADMAP.md
+CLAUDE.md
+.commit-msg-*.txt
+.tag-msg-*.txt
+
+# Source for the project logo — we ship only the rendered Icon.png
+branding/PelleBot.jpeg
+branding/*.jpg
+branding/*.jpeg
+
+# Unused-subsystem source trees — not wired into platform.js dispatch, kept
+# in repo only to satisfy lingering top-level requires that the Phase 1
+# cleanup did not eliminate. Excluded from the published tarball to reduce
+# package size and avoid confusion ("why does the npm tarball contain a
+# callmonitor.js that does nothing?").
+src/accessories/callmonitor/
+src/accessories/childlock/
+src/accessories/network/
+src/accessories/presence/
+src/accessories/wol/
+src/lib/callmonitor.js
+# NOTE: src/lib/telegram.js is required at module-load time by platform.js,
+# router.handler.js, smarthome.handler.js and extras.handler.js — must NOT
+# be excluded. Its `.send()` method is a no-op stub in this fork.
