@@ -189,14 +189,118 @@
       </div>
     </div>
 
-    <!-- ============ STEP 3 — Energy 250 (Phase D placeholder) ============ -->
+    <!-- ============ STEP 3 — Energy 250 Special Path ============ -->
     <div class="step-pane" id="step-3">
-      <div class="alert alert-warning">
-        <strong>Schritt 3 — Energy 250 OBIS-Reader</strong><br>
-        (Wird in Phase D des Wizards implementiert.)
+      <div class="alert alert-info">
+        <strong>Schritt 3 — Smart Energy 250 (OBIS-Reader)</strong><br>
+        Falls deine FritzBox einen Smart Energy 250 mit ISKRA/Iskra-Stromzähler
+        hat: hier kannst du die 4 HomeKit-Tiles für aktuelle Leistung (W) und
+        kumulierte Energie (kWh) je Richtung (Bezug + Einspeisung) anlegen.
       </div>
+
+      <div id="energy250Content" style="margin-top: 1rem;">
+        <!-- Generated dynamically from wizardState.deviceSelections -->
+      </div>
+
       <div class="wizard-nav">
         <button id="backTo2" class="btn btn-outline-secondary">← Zurück zu Schritt 2</button>
+        <button id="goTo4" class="btn btn-primary">Weiter zu Schritt 4 →</button>
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — Router Switches ============ -->
+    <div class="step-pane" id="step-4">
+      <div class="alert alert-info">
+        <strong>Schritt 4 — FritzBox Router-Switches (optional)</strong><br>
+        Falls du Router-Funktionen wie <em>Gast-WLAN</em>, <em>WPS</em>, oder
+        <em>DECT-Basis</em> als HomeKit-Tile haben willst, kannst du diese
+        unten auswählen. Standard ist <em>nichts ausgewählt</em> — wir
+        empfehlen nur die zu aktivieren die du wirklich brauchst (weniger
+        Tiles in Apple Home = übersichtlicher).
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-wifi_guest" class="form-check-input router-switch" data-key="wifi_guest">
+          <label class="form-check-label" for="router-wifi_guest">
+            <strong>Gast-WLAN</strong> — schaltet das Gast-WLAN ein/aus. Empfohlen.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-wps" class="form-check-input router-switch" data-key="wps">
+          <label class="form-check-label" for="router-wps">
+            <strong>WPS</strong> — startet den WPS-Pairing-Modus (2 Min Auto-Stop). Empfohlen.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-wifi_2ghz" class="form-check-input router-switch" data-key="wifi_2ghz">
+          <label class="form-check-label" for="router-wifi_2ghz">
+            WLAN 2.4 GHz — schaltet das 2.4-GHz-Band ein/aus.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-wifi_5ghz" class="form-check-input router-switch" data-key="wifi_5ghz">
+          <label class="form-check-label" for="router-wifi_5ghz">
+            WLAN 5 GHz — schaltet das 5-GHz-Band ein/aus.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-dect" class="form-check-input router-switch" data-key="dect">
+          <label class="form-check-label" for="router-dect">
+            DECT-Basis — schaltet die DECT-Basis ein/aus. <em>Vorsicht:</em> trennt alle DECT-Geräte!
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-aw" class="form-check-input router-switch" data-key="aw">
+          <label class="form-check-label" for="router-aw">
+            Anrufbeantworter — schaltet den Anrufbeantworter ein/aus.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-deflection" class="form-check-input router-switch" data-key="deflection">
+          <label class="form-check-label" for="router-deflection">
+            Rufumleitung — schaltet die Rufumleitung ein/aus.
+          </label>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" id="router-reconnect" class="form-check-input router-switch" data-key="reconnect">
+          <label class="form-check-label" for="router-reconnect">
+            Reconnect — erzwingt eine neue Internet-Verbindung (IP-Wechsel). Trigger-Switch.
+          </label>
+        </div>
+      </div>
+
+      <details style="margin-top: 1rem;">
+        <summary style="cursor: pointer; color: #6c757d;">FritzBox-User braucht spezielle Berechtigung — Hinweis</summary>
+        <div style="margin-top: 0.5rem; padding: 0.5rem; border-left: 3px solid #6c757d;">
+          Für Router-Switches braucht dein FRITZ!Box-User die Berechtigung
+          <em>"FRITZ!Box-Einstellungen"</em> (zusätzlich zu Smart Home).
+          Setting kannst du in der FritzBox-UI prüfen unter
+          <em>System → FRITZ!Box-Benutzer → [User] → Bearbeiten</em>.
+        </div>
+      </details>
+
+      <div class="wizard-nav">
+        <button id="backTo3" class="btn btn-outline-secondary">← Zurück zu Schritt 3</button>
+        <button id="goTo5" class="btn btn-primary">Weiter zu Schritt 5 →</button>
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — Save + Apply (Phase F placeholder) ============ -->
+    <div class="step-pane" id="step-5">
+      <div class="alert alert-warning">
+        <strong>Schritt 5 — Speichern + Anwenden</strong><br>
+        (Wird in Phase F des Wizards implementiert.)
+      </div>
+      <div class="wizard-nav">
+        <button id="backTo4" class="btn btn-outline-secondary">← Zurück zu Schritt 4</button>
       </div>
     </div>
   </div>
@@ -209,6 +313,8 @@
       connection: null,           // { host, port, ssl, tr064, username, password } after step 1 success
       discoveredDevices: [],      // raw discovery output from step 2 load
       deviceSelections: {},       // { ain: { include: bool, accType: string } } after step 2
+      energyTiles: {},            // { ain: [{ obisChannel, name }, ...] } after step 3
+      routerSwitches: {},         // { wifi_guest: bool, wps: bool, ... } after step 4
     };
 
     // ============ DOM References ============
@@ -216,6 +322,8 @@
       1: document.getElementById('step-1'),
       2: document.getElementById('step-2'),
       3: document.getElementById('step-3'),
+      4: document.getElementById('step-4'),
+      5: document.getElementById('step-5'),
     };
     const stepIndicators = document.querySelectorAll('.wizard-step-indicator .step');
 
@@ -451,7 +559,149 @@
     }
 
     backTo1.addEventListener('click', () => showStep(1));
-    goTo3.addEventListener('click', () => showStep(3));
+    goTo3.addEventListener('click', () => {
+      showStep(3);
+      renderEnergy250();
+    });
     backTo2.addEventListener('click', () => showStep(2));
+
+    const goTo4 = document.getElementById('goTo4');
+    const backTo3 = document.getElementById('backTo3');
+    goTo4.addEventListener('click', () => showStep(4));
+    backTo3.addEventListener('click', () => showStep(3));
+
+    // ============ Step 3 — Energy 250 Special Path ============
+    function renderEnergy250() {
+      const container = document.getElementById('energy250Content');
+
+      // Find all OBIS sub-AINs the user selected as energy-temperature
+      const obisSelections = Object.entries(wizardState.deviceSelections)
+        .filter(([ain, sel]) => sel.include && sel.accType === 'energy-temperature' && /-[12]$/.test(ain));
+
+      if (obisSelections.length === 0) {
+        container.innerHTML =
+          '<div class="alert alert-secondary">' +
+          'Keine OBIS-Sub-AINs in der Geräte-Auswahl gefunden. ' +
+          'Falls du eine FRITZ!Smart Energy 250 hast und in Schritt 2 ' +
+          'die Sub-AINs (z.B. <code>XYZ-1</code> und <code>XYZ-2</code>) als ' +
+          '<em>Energy-Reader</em> markiert hast, erscheinen sie hier. ' +
+          'Sonst direkt weiter zu Schritt 4.' +
+          '</div>';
+        return;
+      }
+
+      // Group OBIS sub-AINs by their base AIN
+      const byBase = {};
+      for (const [ain, sel] of obisSelections) {
+        const baseAin = ain.replace(/-[12]$/, '');
+        const suffix = ain.endsWith('-1') ? 1 : 2;
+        if (!byBase[baseAin]) byBase[baseAin] = { ain1: null, ain2: null };
+        if (suffix === 1) byBase[baseAin].ain1 = { ain, name: sel.name };
+        else byBase[baseAin].ain2 = { ain, name: sel.name };
+      }
+
+      // Default tile names per direction
+      const defaultNames = {
+        '-1': { current_power: 'Aktueller Verbrauch', total_energy: 'Gesamt Verbrauch' },
+        '-2': { current_power: 'Aktuelle Einspeisung', total_energy: 'Gesamt Einspeisung' },
+      };
+
+      // Initialize state for each OBIS AIN if not already there
+      for (const baseAin of Object.keys(byBase)) {
+        const group = byBase[baseAin];
+        for (const dir of ['-1', '-2']) {
+          const entry = dir === '-1' ? group.ain1 : group.ain2;
+          if (!entry) continue;
+          if (!wizardState.energyTiles[entry.ain]) {
+            wizardState.energyTiles[entry.ain] = [
+              { obisChannel: 'current_power', name: defaultNames[dir].current_power },
+              { obisChannel: 'total_energy', name: defaultNames[dir].total_energy },
+            ];
+          }
+        }
+      }
+
+      // Render each OBIS reader as a card
+      const html = Object.entries(byBase).map(([baseAin, group]) => {
+        const hasConsumption = !!group.ain1;
+        const hasFeedIn = !!group.ain2;
+
+        let warningHtml = '';
+        if (!hasConsumption || !hasFeedIn) {
+          warningHtml =
+            '<div class="alert alert-warning" style="margin-top: 0.5rem;">' +
+            '<strong>Hinweis:</strong> Nur ' +
+            (hasConsumption ? 'die Bezugs-Richtung (-1)' : 'die Einspeisungs-Richtung (-2)') +
+            ' ist konfiguriert. Bei PV-Anlagen sind normalerweise beide Richtungen vorhanden. ' +
+            'Falls die andere Seite auch da sein soll: zurück zu Schritt 2, dort beide Sub-AINs ' +
+            'als <em>Energy-Reader</em> markieren.' +
+            '</div>';
+        }
+
+        const buildTileRow = (entry, dir) => {
+          if (!entry) return '';
+          const tiles = wizardState.energyTiles[entry.ain] || [];
+          return tiles.map((tile, idx) => {
+            const unit = tile.obisChannel === 'current_power' ? 'W' : 'kWh';
+            const channelLabel = tile.obisChannel === 'current_power' ? 'momentan' : 'kumuliert';
+            return `
+              <div class="form-row" style="display: flex; gap: 0.75rem; align-items: end;">
+                <div style="flex: 1;">
+                  <label style="font-size: 0.85rem;">Tile-Name (${channelLabel}, ${unit})</label>
+                  <input type="text" class="form-control form-control-sm energy-tile-name"
+                         data-ain="${entry.ain}" data-idx="${idx}"
+                         value="${escapeHtml(tile.name)}">
+                </div>
+                <div style="min-width: 110px; text-align: right; font-size: 0.85rem; color: #6c757d; padding-bottom: 0.5rem;">
+                  ${tile.obisChannel} (${unit})
+                </div>
+              </div>
+            `;
+          }).join('');
+        };
+
+        return `
+          <div class="device-card" style="margin-bottom: 1.5rem;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">
+              OBIS-Reader: <code>${baseAin}</code>
+            </div>
+            ${warningHtml}
+            ${hasConsumption ? `
+              <div style="margin-top: 0.75rem;">
+                <div style="font-weight: 500; color: #198754;">📥 Bezug (Sub-AIN ${group.ain1.ain})</div>
+                <small class="text-muted">${escapeHtml(group.ain1.name)}</small>
+                ${buildTileRow(group.ain1, '-1')}
+              </div>
+            ` : ''}
+            ${hasFeedIn ? `
+              <div style="margin-top: 0.75rem;">
+                <div style="font-weight: 500; color: #6610f2;">📤 Einspeisung (Sub-AIN ${group.ain2.ain})</div>
+                <small class="text-muted">${escapeHtml(group.ain2.name)}</small>
+                ${buildTileRow(group.ain2, '-2')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML =
+        '<div class="alert alert-success">' +
+        '<strong>✓ ' + Object.keys(byBase).length + ' OBIS-Reader erkannt</strong><br>' +
+        'Pro Sub-AIN werden 2 Tiles angelegt (aktuelle Leistung in W + kumulierte Energie in kWh). ' +
+        'Du kannst die Tile-Namen unten anpassen. Apple Home zeigt °C als Einheit, der Zahlenwert ist aber W bzw. kWh.' +
+        '</div>' +
+        html;
+
+      // Wire up name-input change handlers
+      container.querySelectorAll('.energy-tile-name').forEach((input) => {
+        input.addEventListener('input', () => {
+          const ain = input.getAttribute('data-ain');
+          const idx = parseInt(input.getAttribute('data-idx'), 10);
+          if (wizardState.energyTiles[ain] && wizardState.energyTiles[ain][idx]) {
+            wizardState.energyTiles[ain][idx].name = input.value;
+          }
+        });
+      });
+    }
   })();
 </script>
