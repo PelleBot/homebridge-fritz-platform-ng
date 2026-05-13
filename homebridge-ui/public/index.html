@@ -1,77 +1,220 @@
 <!--
   Custom UI for @pellebot/homebridge-fritz-platform-hb2
 
-  Loaded by Homebridge Config UI X when the user opens the plugin's settings.
-  The global `window.homebridge` object provides IPC to homebridge-ui/server.js
-  via homebridge.request(endpoint, payload).
+  Phase B: Connection Test Wizard
+  - Form for FritzBox connection params (host, port, ssl, tr064, user, password)
+  - Pre-fills from existing plugin config if available
+  - "Verbindung testen"-button calls server.js /test-connection endpoint
+  - Live feedback on success/failure with actionable hints
 
-  Phase A baseline: a "Hello" page with a server-ping button to verify the
-  Custom-UI infrastructure works end-to-end. Later phases add the multi-step
-  wizard for FritzBox configuration.
+  Later phases add: Step navigation, Auto-Discovery, Energy 250, Router-Switches,
+  Save.
 -->
+<style>
+  .wizard-step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+  .wizard-step-indicator .step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding-top: 2.5rem;
+    color: var(--bs-secondary, #6c757d);
+    font-size: 0.8rem;
+  }
+  .wizard-step-indicator .step::before {
+    content: attr(data-step);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--bs-gray-300, #dee2e6);
+    color: white;
+    line-height: 2rem;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  .wizard-step-indicator .step.active {
+    color: var(--bs-primary, #6f42c1);
+    font-weight: 600;
+  }
+  .wizard-step-indicator .step.active::before {
+    background: var(--bs-primary, #6f42c1);
+  }
+  .wizard-step-indicator .step.done::before {
+    background: var(--bs-success, #198754);
+    content: "✓";
+  }
+  .form-row {
+    margin-bottom: 1rem;
+  }
+  .test-result {
+    margin-top: 1rem;
+  }
+</style>
+
 <div class="card">
   <div class="card-body">
-    <div style="text-align: center; margin-bottom: 1.5rem;">
+    <div style="text-align: center; margin-bottom: 1rem;">
       <img src="https://raw.githubusercontent.com/PelleBot/homebridge-fritz-platform-ng/main/branding/Icon.png"
            alt="Plugin Logo"
-           style="max-width: 120px; border-radius: 16px;">
-      <h3 style="margin-top: 1rem;">Homebridge FRITZ!Box Platform (HB2)</h3>
-      <p class="text-muted">Setup Wizard — Phase A Foundation Preview</p>
+           style="max-width: 80px; border-radius: 12px;">
+      <h4 style="margin-top: 0.75rem;">Homebridge FRITZ!Box Platform (HB2) — Setup Wizard</h4>
+    </div>
+
+    <div class="wizard-step-indicator">
+      <div class="step active" data-step="1">FritzBox-Verbindung</div>
+      <div class="step" data-step="2">Geräte-Auswahl</div>
+      <div class="step" data-step="3">Energy 250</div>
+      <div class="step" data-step="4">Router-Switches</div>
+      <div class="step" data-step="5">Speichern</div>
     </div>
 
     <div class="alert alert-info">
-      <strong>Phase A — Foundation Test</strong><br>
-      Diese Seite ersetzt das bisherige JSON-Schema-Formular. Klick unten auf
-      <em>Server-Ping</em> um zu prüfen ob die Custom-UI-Server-Verbindung
-      funktioniert. Wenn ja, kommt in Phase B der echte Wizard-Flow.
+      <strong>Schritt 1 — FritzBox-Verbindung</strong><br>
+      Trage hier die Verbindungsdaten zu deiner FritzBox ein. Du brauchst einen
+      dedizierten FRITZ!Box-User mit der Berechtigung <em>"Smart Home"</em>
+      (FritzBox-UI → System → FRITZ!Box-Benutzer → Bearbeiten).
     </div>
 
-    <div class="text-center" style="margin: 2rem 0;">
-      <button id="pingBtn" class="btn btn-primary btn-lg">
-        Server-Ping
+    <div class="form-row">
+      <label for="host">FritzBox-IP-Adresse</label>
+      <input type="text" id="host" class="form-control" placeholder="192.168.178.1">
+      <small class="text-muted">Standardmäßig <code>192.168.178.1</code>. Bei abweichendem Netzwerk anpassen.</small>
+    </div>
+
+    <div class="form-row" style="display: flex; gap: 1rem;">
+      <div style="flex: 1;">
+        <label for="port">Port</label>
+        <input type="number" id="port" class="form-control" placeholder="49000" value="49000">
+        <small class="text-muted">Standard <code>49000</code> (HTTP) — Library handhabt SSL-Switch intern.</small>
+      </div>
+      <div style="flex: 1; padding-top: 1.85rem;">
+        <div class="form-check">
+          <input type="checkbox" id="ssl" class="form-check-input" checked>
+          <label class="form-check-label" for="ssl">SSL aktiviert</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="tr064" class="form-check-input" checked>
+          <label class="form-check-label" for="tr064">TR-064 aktiviert</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="username">FritzBox-User</label>
+      <input type="text" id="username" class="form-control" placeholder="homebridge-user" autocomplete="off">
+      <small class="text-muted">Dedizierter User mit Smart-Home-Berechtigung.</small>
+    </div>
+
+    <div class="form-row">
+      <label for="password">Passwort</label>
+      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="off">
+    </div>
+
+    <div style="margin-top: 1.5rem; text-align: center;">
+      <button id="testBtn" class="btn btn-primary btn-lg">
+        Verbindung testen
       </button>
     </div>
 
-    <div id="pingResult" style="margin-top: 1rem;"></div>
-
-    <hr>
-
-    <details>
-      <summary style="cursor: pointer;">Fallback: klassisches JSON-Form anzeigen</summary>
-      <div style="margin-top: 1rem;">
-        <p class="text-muted">
-          Solange der Wizard im Aufbau ist, kannst du die Config jederzeit auch
-          per JSON-Editor von Config UI X bearbeiten — oben rechts in der
-          Plugin-Settings-Toolbar gibt's einen Toggle "JSON".
-        </p>
-      </div>
-    </details>
+    <div id="testResult" class="test-result"></div>
   </div>
 </div>
 
 <script>
   (() => {
-    const pingBtn = document.getElementById('pingBtn');
-    const resultEl = document.getElementById('pingResult');
+    const inputs = {
+      host: document.getElementById('host'),
+      port: document.getElementById('port'),
+      ssl: document.getElementById('ssl'),
+      tr064: document.getElementById('tr064'),
+      username: document.getElementById('username'),
+      password: document.getElementById('password'),
+    };
+    const testBtn = document.getElementById('testBtn');
+    const resultEl = document.getElementById('testResult');
 
-    pingBtn.addEventListener('click', async () => {
-      resultEl.innerHTML = '<div class="text-muted">Pinging server…</div>';
-      pingBtn.disabled = true;
+    // Prefill from existing plugin config if present.
+    (async () => {
+      try {
+        const allConfig = await homebridge.getPluginConfig();
+        const fritz = (allConfig || []).find((c) => c && c.platform === 'FritzPlatform');
+        const master = fritz && fritz.devices && fritz.devices.find((d) => d.master === true);
+        if (master) {
+          if (master.host) inputs.host.value = master.host;
+          if (master.port) inputs.port.value = master.port;
+          if (typeof master.ssl === 'boolean') inputs.ssl.checked = master.ssl;
+          if (typeof master.tr064 === 'boolean') inputs.tr064.checked = master.tr064;
+          if (master.username) inputs.username.value = master.username;
+          if (master.password) inputs.password.value = master.password;
+        }
+      } catch (err) {
+        // No config yet — keep placeholders, nothing to prefill.
+      }
+    })();
+
+    testBtn.addEventListener('click', async () => {
+      resultEl.innerHTML = '';
+
+      const payload = {
+        host: inputs.host.value.trim(),
+        port: parseInt(inputs.port.value, 10) || 49000,
+        ssl: inputs.ssl.checked,
+        tr064: inputs.tr064.checked,
+        username: inputs.username.value.trim(),
+        password: inputs.password.value,
+      };
+
+      if (!payload.host || !payload.username || !payload.password) {
+        resultEl.innerHTML =
+          '<div class="alert alert-warning">Bitte Host, User und Passwort eintragen.</div>';
+        return;
+      }
+
+      testBtn.disabled = true;
+      testBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Teste…';
 
       try {
-        const response = await homebridge.request('/ping');
-        resultEl.innerHTML =
-          '<div class="alert alert-success">' +
-          '<strong>✓ OK</strong><br>' +
-          '<code>' + JSON.stringify(response, null, 2) + '</code>' +
-          '</div>';
+        const response = await homebridge.request('/test-connection', payload);
+
+        if (response.ok) {
+          let products = '';
+          if (response.productNames && response.productNames.length) {
+            products = '<br><small class="text-muted">Produkte: ' +
+              response.productNames.join(', ') + '</small>';
+          }
+          resultEl.innerHTML =
+            '<div class="alert alert-success">' +
+            '<strong>✓ Verbindung erfolgreich</strong><br>' +
+            response.message + products +
+            '</div>' +
+            '<div class="text-center" style="margin-top: 1rem;">' +
+            '<button class="btn btn-success" disabled>Weiter zu Schritt 2 (Phase C — noch nicht implementiert)</button>' +
+            '</div>';
+        } else {
+          resultEl.innerHTML =
+            '<div class="alert alert-danger">' +
+            '<strong>✗ Verbindung fehlgeschlagen</strong><br>' +
+            (response.error || 'Unbekannter Fehler') +
+            (response.code ? ' <code>(' + response.code + ')</code>' : '') +
+            (response.hint ? '<br><em>' + response.hint + '</em>' : '') +
+            '</div>';
+        }
       } catch (err) {
         resultEl.innerHTML =
           '<div class="alert alert-danger">' +
-          '<strong>✗ Fehler:</strong> ' + (err.message || String(err)) +
+          '<strong>Server-Fehler:</strong> ' + (err.message || String(err)) +
           '</div>';
       } finally {
-        pingBtn.disabled = false;
+        testBtn.disabled = false;
+        testBtn.innerHTML = 'Verbindung testen';
       }
     });
   })();
