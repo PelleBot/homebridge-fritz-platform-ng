@@ -293,14 +293,27 @@
       </div>
     </div>
 
-    <!-- ============ STEP 5 — Save + Apply (Phase F placeholder) ============ -->
+    <!-- ============ STEP 5 — Save + Apply ============ -->
     <div class="step-pane" id="step-5">
-      <div class="alert alert-warning">
-        <strong>Schritt 5 — Speichern + Anwenden</strong><br>
-        (Wird in Phase F des Wizards implementiert.)
+      <div class="alert alert-info">
+        <strong>Schritt 5 — Konfiguration speichern</strong><br>
+        Zusammenfassung deiner Auswahl. Klick auf <em>"Konfiguration speichern"</em>
+        unten um die <code>config.json</code> zu aktualisieren. Danach musst du
+        Homebridge neu starten damit die Änderungen wirksam werden.
       </div>
+
+      <div id="saveSummary" style="margin-top: 1rem;"></div>
+
+      <details style="margin-top: 1rem;">
+        <summary style="cursor: pointer;">Generierte Plugin-Config anzeigen (JSON-Vorschau)</summary>
+        <pre id="savePreview" style="background: var(--bs-tertiary-bg, #f8f9fa); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; max-height: 400px; font-size: 0.75rem; margin-top: 0.5rem;"></pre>
+      </details>
+
+      <div id="saveResult" style="margin-top: 1rem;"></div>
+
       <div class="wizard-nav">
         <button id="backTo4" class="btn btn-outline-secondary">← Zurück zu Schritt 4</button>
+        <button id="saveBtn" class="btn btn-success btn-lg">💾 Konfiguration speichern</button>
       </div>
     </div>
   </div>
@@ -575,8 +588,215 @@
 
     const goTo5 = document.getElementById('goTo5');
     const backTo4 = document.getElementById('backTo4');
-    goTo5.addEventListener('click', () => showStep(5));
+    goTo5.addEventListener('click', () => {
+      showStep(5);
+      renderSavePreview();
+    });
     backTo4.addEventListener('click', () => showStep(4));
+
+    // ============ Step 5 — Build + Save ============
+
+    /**
+     * Convert the entire wizardState into a FritzPlatform config object.
+     * Layout:
+     *   { platform, name, devices: [<master>], smarthome: [...], options: { polling: { timer: 30 } } }
+     * - master uses Phase 1 credentials + Phase 4 routerSwitches as master.options
+     * - smarthome[] includes Phase 2 device selections (non-OBIS, accType !== 'skip')
+     * - smarthome[] includes Phase 3 OBIS tiles (4 per Energy 250 reader, typically)
+     */
+    function buildPluginConfig() {
+      const conn = wizardState.connection || {};
+
+      // Master FritzBox device
+      const master = {
+        active: true,
+        name: 'FritzBox',
+        host: conn.host,
+        port: conn.port || 49000,
+        username: conn.username,
+        password: conn.password,
+        ssl: conn.ssl !== false,
+        tr064: conn.tr064 !== false,
+        master: true,
+        hide: true,
+        connection: 'cable',
+      };
+
+      // Router-Switches as master.options
+      const routerOpts = {};
+      for (const [key, enabled] of Object.entries(wizardState.routerSwitches || {})) {
+        if (enabled) routerOpts[key] = 'switch';
+      }
+      if (Object.keys(routerOpts).length > 0) {
+        master.options = routerOpts;
+      }
+
+      // Smart-Home entries
+      const smarthome = [];
+
+      // 1. Regular DECT devices from Phase 2 (non-OBIS, accType meaningful)
+      for (const [ain, sel] of Object.entries(wizardState.deviceSelections || {})) {
+        if (!sel.include || sel.accType === 'skip' || sel.accType === 'unknown') continue;
+        if (sel.accType === 'energy-temperature') continue; // OBIS handled below
+
+        const raw = wizardState.discoveredDevices.find((d) => d.ain === ain);
+        const flags = (raw && raw.flags) || {};
+
+        const entry = {
+          active: true,
+          name: sel.name || (raw && raw.name) || ain,
+          ain,
+          accType: sel.accType,
+        };
+
+        // Per-accType conditional fields, defaulting to sensible values
+        switch (sel.accType) {
+          case 'thermostat':
+            entry.temperature = !!flags.hasTemperature;
+            entry.window = true;
+            entry.battery = !!flags.hasBattery;
+            break;
+          case 'temperature':
+            entry.battery = !!flags.hasBattery;
+            break;
+          case 'lightbulb':
+            entry.brightness = !!flags.hasLevelcontrol;
+            entry.color = !!flags.hasColorcontrol;
+            break;
+          case 'switch':
+            entry.energy = !!flags.hasPowermeter;
+            break;
+          case 'contact':
+            entry.battery = !!flags.hasBattery;
+            break;
+          case 'button':
+            entry.battery = !!flags.hasBattery;
+            break;
+        }
+
+        smarthome.push(entry);
+      }
+
+      // 2. OBIS Energy 250 tiles from Phase 3 (one entry per (sub-AIN x obisChannel))
+      for (const [ain, tiles] of Object.entries(wizardState.energyTiles || {})) {
+        // Only include if user kept this sub-AIN in Phase 2 (in case they went back)
+        const sel = wizardState.deviceSelections[ain];
+        if (!sel || !sel.include || sel.accType !== 'energy-temperature') continue;
+
+        for (const tile of tiles) {
+          smarthome.push({
+            active: true,
+            name: tile.name,
+            ain,
+            accType: 'energy-temperature',
+            obisChannel: tile.obisChannel,
+          });
+        }
+      }
+
+      return {
+        platform: 'FritzPlatform',
+        name: 'FritzBox',
+        devices: [master],
+        smarthome,
+        options: {
+          polling: { timer: 30 },
+        },
+      };
+    }
+
+    function renderSavePreview() {
+      const config = buildPluginConfig();
+      const summary = document.getElementById('saveSummary');
+      const preview = document.getElementById('savePreview');
+
+      const nDevices = config.smarthome.filter((s) => s.accType !== 'energy-temperature').length;
+      const nEnergy = config.smarthome.filter((s) => s.accType === 'energy-temperature').length;
+      const nRouter = Object.keys((config.devices[0] && config.devices[0].options) || {}).length;
+
+      // Mask password in preview for safety
+      const maskedConfig = JSON.parse(JSON.stringify(config));
+      if (maskedConfig.devices[0] && maskedConfig.devices[0].password) {
+        maskedConfig.devices[0].password = '••••••••';
+      }
+
+      summary.innerHTML = `
+        <div class="device-card">
+          <div style="font-weight: 600;">📦 Konfigurations-Zusammenfassung</div>
+          <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+            <li><strong>FritzBox:</strong> ${escapeHtml(config.devices[0].host)} (User: ${escapeHtml(config.devices[0].username)})</li>
+            <li><strong>${nDevices}</strong> Smart-Home-Gerät(e) (Thermostate, Lampen, Sensoren, Schalter)</li>
+            <li><strong>${nEnergy}</strong> Energy-Tile(s) für FRITZ!Smart Energy 250 OBIS-Reader</li>
+            <li><strong>${nRouter}</strong> Router-Switch(es) als HomeKit-Tiles</li>
+          </ul>
+        </div>
+      `;
+
+      preview.textContent = JSON.stringify(maskedConfig, null, 2);
+    }
+
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.addEventListener('click', async () => {
+      const saveResult = document.getElementById('saveResult');
+      saveResult.innerHTML = '';
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Speichere…';
+
+      try {
+        const newConfig = buildPluginConfig();
+
+        // homebridge.updatePluginConfig expects an array of platform config objects
+        // (one plugin can register multiple platform instances, but ours is singular)
+        await homebridge.updatePluginConfig([newConfig]);
+
+        // Persist the in-memory config to disk. In standalone mode (running
+        // homebridge-config-ui-x standalone.js without hb-service), this can
+        // sometimes hang because the websocket ACK isn't sent. Race with a
+        // 3-second timeout so the UI doesn't freeze forever — the file is
+        // already written synchronously by the time savePluginConfig returns.
+        await Promise.race([
+          homebridge.savePluginConfig(),
+          new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+
+        saveResult.innerHTML = `
+          <div class="alert alert-success">
+            <strong>✓ Konfiguration gespeichert.</strong><br>
+            Damit die Änderungen wirksam werden, muss Homebridge neu gestartet werden.
+          </div>
+          <div class="text-center" style="margin-top: 1rem;">
+            <button id="restartBtn" class="btn btn-warning btn-lg">🔄 Homebridge jetzt neu starten</button>
+            <div style="margin-top: 0.5rem;">
+              <small class="text-muted">Alternativ später via Config UI X "Restart"-Button.</small>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('restartBtn').addEventListener('click', async () => {
+          try {
+            await homebridge.restartHomebridge();
+          } catch (err) {
+            // If restartHomebridge isn't available (e.g. standalone mode without
+            // hb-service), show a manual instruction.
+            saveResult.innerHTML +=
+              '<div class="alert alert-info" style="margin-top: 1rem;">' +
+              'Automatischer Restart nicht verfügbar. Bitte Homebridge manuell ' +
+              'neu starten: <code>sudo hb-service restart</code> oder über die ' +
+              'Config UI X Toolbar.' +
+              '</div>';
+          }
+        });
+      } catch (err) {
+        saveResult.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Fehler beim Speichern:</strong> ${escapeHtml(err.message || String(err))}
+          </div>
+        `;
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '💾 Konfiguration speichern';
+      }
+    });
 
     // ============ Step 4 — Router Switches ============
     // Pre-fill checkboxes from existing master.options (if user is editing
