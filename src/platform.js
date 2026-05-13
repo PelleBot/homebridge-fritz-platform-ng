@@ -7,15 +7,20 @@ const { version } = require('../package.json');
 const Telegram = require('./lib/telegram');
 
 // Accessories — DECT-only Minimal-Patch-Fork.
-// Out-of-scope subsystems (callmonitor, presence, network, wol, childlock, extras)
-// are not wired in here. Their directories remain in src/accessories/ as dead code
-// — they are intentionally not deleted because router/router.accessory.js still has
-// a top-level require('../extras/extras.handler') that would fail at load time
+// Out-of-scope subsystems (callmonitor, presence, network, wol, childlock) are not
+// wired in here. Their directories remain in src/accessories/ as dead code — they
+// are intentionally not deleted because router/router.accessory.js still has a
+// top-level require('../extras/extras.handler') that would fail at load time
 // otherwise. The router/ module itself is REQUIRED for FritzBox initialization:
 // RouterSetup creates the @seydx/fritzbox client that all smarthome accessories
-// depend on via meshMaster.fritzbox. Configure the master router with
-// "master: true, hide: true" to suppress the Router-Accessory itself.
+// depend on via meshMaster.fritzbox.
+//
+// extras/extras.accessory.js IS wired in (case 'extra' below) because it handles
+// the Router-Companion switches (wifi_guest, wps, dect, etc.) — the WiFi/WPS
+// dispatch is routed via validOptionsSwitches to RouterHandler, not to the
+// out-of-scope extras subsystems (DNS, phonebook, etc.).
 const { RouterAccessory, RouterSetup } = require('./accessories/router/router');
+const ExtrasAccessory = require('./accessories/extras/extras.accessory');
 const {
   SHBlindAccessory,
   SHButtonAccessory,
@@ -176,6 +181,9 @@ FritzPlatform.prototype = {
     switch (device.type) {
       case 'router':
         new RouterAccessory(this.api, accessory, this.accessories, this.meshMaster);
+        break;
+      case 'extra':
+        new ExtrasAccessory(this.api, accessory, this.accessories, this.meshMaster);
         break;
       case 'smarthome':
         if (device.subtype === 'smarthome-switch' && device.energy)

@@ -262,7 +262,10 @@ class Handler {
           );
           logger.debug(response, `${accessory.displayName} (${subtype})`);
 
-          state = response['NewX_AVM-DE_WPSStatus'] !== 'off';
+          // WPS is "on" only when actively running (pbc or pin mode).
+          // 'stop' = idle, anything starting with 'err_' = leftover error state, both should map to OFF.
+          const mode = response['NewX_AVM-DE_WPSMode'];
+          state = mode === 'pbc' || mode === 'pin';
         } catch (err) {
           logger.warn('An error occured during getting state!', `${accessory.displayName} (${subtype})`);
           logger.error(err, `${accessory.displayName} (${subtype})`);
