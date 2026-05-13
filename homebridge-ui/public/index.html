@@ -1,14 +1,12 @@
 <!--
   Custom UI for @pellebot/homebridge-fritz-platform-hb2
 
-  Phase B: Connection Test Wizard
-  - Form for FritzBox connection params (host, port, ssl, tr064, user, password)
-  - Pre-fills from existing plugin config if available
-  - "Verbindung testen"-button calls server.js /test-connection endpoint
-  - Live feedback on success/failure with actionable hints
+  Phases A+B+C implemented:
+    A. Foundation (server.js, public/index.html, customUi flag)
+    B. Connection test — Step 1 with form + /test-connection endpoint
+    C. Device discovery — Step 2 with auto-detected accType per device
 
-  Later phases add: Step navigation, Auto-Discovery, Energy 250, Router-Switches,
-  Save.
+  Future phases: Energy 250, Router-Switches, Save, Edit mode.
 -->
 <style>
   .wizard-step-indicator {
@@ -54,8 +52,51 @@
   .form-row {
     margin-bottom: 1rem;
   }
-  .test-result {
-    margin-top: 1rem;
+  .step-pane {
+    display: none;
+  }
+  .step-pane.active {
+    display: block;
+  }
+  .device-card {
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    background: var(--bs-body-bg, #fff);
+  }
+  .device-card.inactive {
+    opacity: 0.5;
+  }
+  .device-card .device-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .device-card .device-name {
+    flex: 1;
+    font-weight: 600;
+  }
+  .device-card .device-ain {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--bs-secondary, #6c757d);
+  }
+  .device-card .device-meta {
+    margin-top: 0.5rem;
+    margin-left: 1.75rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary, #6c757d);
+  }
+  .device-card .device-meta .badge {
+    margin-right: 0.5rem;
+  }
+  .wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
   }
 </style>
 
@@ -76,60 +117,108 @@
       <div class="step" data-step="5">Speichern</div>
     </div>
 
-    <div class="alert alert-info">
-      <strong>Schritt 1 — FritzBox-Verbindung</strong><br>
-      Trage hier die Verbindungsdaten zu deiner FritzBox ein. Du brauchst einen
-      dedizierten FRITZ!Box-User mit der Berechtigung <em>"Smart Home"</em>
-      (FritzBox-UI → System → FRITZ!Box-Benutzer → Bearbeiten).
-    </div>
-
-    <div class="form-row">
-      <label for="host">FritzBox-IP-Adresse</label>
-      <input type="text" id="host" class="form-control" placeholder="192.168.178.1">
-      <small class="text-muted">Standardmäßig <code>192.168.178.1</code>. Bei abweichendem Netzwerk anpassen.</small>
-    </div>
-
-    <div class="form-row" style="display: flex; gap: 1rem;">
-      <div style="flex: 1;">
-        <label for="port">Port</label>
-        <input type="number" id="port" class="form-control" placeholder="49000" value="49000">
-        <small class="text-muted">Standard <code>49000</code> (HTTP) — Library handhabt SSL-Switch intern.</small>
+    <!-- ============ STEP 1 — Connection Test ============ -->
+    <div class="step-pane active" id="step-1">
+      <div class="alert alert-info">
+        <strong>Schritt 1 — FritzBox-Verbindung</strong><br>
+        Trage hier die Verbindungsdaten zu deiner FritzBox ein. Du brauchst einen
+        dedizierten FRITZ!Box-User mit der Berechtigung <em>"Smart Home"</em>
+        (FritzBox-UI → System → FRITZ!Box-Benutzer → Bearbeiten).
       </div>
-      <div style="flex: 1; padding-top: 1.85rem;">
-        <div class="form-check">
-          <input type="checkbox" id="ssl" class="form-check-input" checked>
-          <label class="form-check-label" for="ssl">SSL aktiviert</label>
+
+      <div class="form-row">
+        <label for="host">FritzBox-IP-Adresse</label>
+        <input type="text" id="host" class="form-control" placeholder="192.168.178.1">
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 1rem;">
+        <div style="flex: 1;">
+          <label for="port">Port</label>
+          <input type="number" id="port" class="form-control" placeholder="49000" value="49000">
         </div>
-        <div class="form-check">
-          <input type="checkbox" id="tr064" class="form-check-input" checked>
-          <label class="form-check-label" for="tr064">TR-064 aktiviert</label>
+        <div style="flex: 1; padding-top: 1.85rem;">
+          <div class="form-check">
+            <input type="checkbox" id="ssl" class="form-check-input" checked>
+            <label class="form-check-label" for="ssl">SSL aktiviert</label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="tr064" class="form-check-input" checked>
+            <label class="form-check-label" for="tr064">TR-064 aktiviert</label>
+          </div>
         </div>
+      </div>
+
+      <div class="form-row">
+        <label for="username">FritzBox-User</label>
+        <input type="text" id="username" class="form-control" placeholder="homebridge-user" autocomplete="off">
+      </div>
+
+      <div class="form-row">
+        <label for="password">Passwort</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="off">
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button id="testBtn" class="btn btn-primary btn-lg">
+          Verbindung testen
+        </button>
+      </div>
+
+      <div id="testResult" style="margin-top: 1rem;"></div>
+    </div>
+
+    <!-- ============ STEP 2 — Device Discovery ============ -->
+    <div class="step-pane" id="step-2">
+      <div class="alert alert-info">
+        <strong>Schritt 2 — Geräte-Auswahl</strong><br>
+        Wir haben deine FritzBox abgefragt. Wähle aus, welche Geräte du in
+        HomeKit nutzen möchtest. Der vorgeschlagene Typ wurde automatisch
+        anhand der Geräte-Eigenschaften erkannt — du kannst ihn pro Gerät
+        überschreiben falls nötig.
+      </div>
+
+      <div id="deviceList" style="margin-top: 1rem;">
+        <div class="text-center text-muted" style="padding: 2rem;">
+          Lade Geräte…
+        </div>
+      </div>
+
+      <div class="wizard-nav">
+        <button id="backTo1" class="btn btn-outline-secondary">← Zurück zu Schritt 1</button>
+        <button id="goTo3" class="btn btn-primary">Weiter zu Schritt 3 →</button>
       </div>
     </div>
 
-    <div class="form-row">
-      <label for="username">FritzBox-User</label>
-      <input type="text" id="username" class="form-control" placeholder="homebridge-user" autocomplete="off">
-      <small class="text-muted">Dedizierter User mit Smart-Home-Berechtigung.</small>
+    <!-- ============ STEP 3 — Energy 250 (Phase D placeholder) ============ -->
+    <div class="step-pane" id="step-3">
+      <div class="alert alert-warning">
+        <strong>Schritt 3 — Energy 250 OBIS-Reader</strong><br>
+        (Wird in Phase D des Wizards implementiert.)
+      </div>
+      <div class="wizard-nav">
+        <button id="backTo2" class="btn btn-outline-secondary">← Zurück zu Schritt 2</button>
+      </div>
     </div>
-
-    <div class="form-row">
-      <label for="password">Passwort</label>
-      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="off">
-    </div>
-
-    <div style="margin-top: 1.5rem; text-align: center;">
-      <button id="testBtn" class="btn btn-primary btn-lg">
-        Verbindung testen
-      </button>
-    </div>
-
-    <div id="testResult" class="test-result"></div>
   </div>
 </div>
 
 <script>
   (() => {
+    // Wizard state — persists across step transitions
+    const wizardState = {
+      connection: null,           // { host, port, ssl, tr064, username, password } after step 1 success
+      discoveredDevices: [],      // raw discovery output from step 2 load
+      deviceSelections: {},       // { ain: { include: bool, accType: string } } after step 2
+    };
+
+    // ============ DOM References ============
+    const stepPanes = {
+      1: document.getElementById('step-1'),
+      2: document.getElementById('step-2'),
+      3: document.getElementById('step-3'),
+    };
+    const stepIndicators = document.querySelectorAll('.wizard-step-indicator .step');
+
     const inputs = {
       host: document.getElementById('host'),
       port: document.getElementById('port'),
@@ -139,9 +228,26 @@
       password: document.getElementById('password'),
     };
     const testBtn = document.getElementById('testBtn');
-    const resultEl = document.getElementById('testResult');
+    const testResult = document.getElementById('testResult');
+    const deviceList = document.getElementById('deviceList');
+    const backTo1 = document.getElementById('backTo1');
+    const goTo3 = document.getElementById('goTo3');
+    const backTo2 = document.getElementById('backTo2');
 
-    // Prefill from existing plugin config if present.
+    // ============ Step navigation ============
+    function showStep(n) {
+      Object.entries(stepPanes).forEach(([k, el]) => {
+        el.classList.toggle('active', k === String(n));
+      });
+      stepIndicators.forEach((el) => {
+        const step = parseInt(el.getAttribute('data-step'), 10);
+        el.classList.toggle('active', step === n);
+        el.classList.toggle('done', step < n);
+      });
+    }
+
+    // ============ Step 1 — Connection Test ============
+    // Prefill from existing plugin config
     (async () => {
       try {
         const allConfig = await homebridge.getPluginConfig();
@@ -156,12 +262,12 @@
           if (master.password) inputs.password.value = master.password;
         }
       } catch (err) {
-        // No config yet — keep placeholders, nothing to prefill.
+        // No config yet — keep placeholders.
       }
     })();
 
     testBtn.addEventListener('click', async () => {
-      resultEl.innerHTML = '';
+      testResult.innerHTML = '';
 
       const payload = {
         host: inputs.host.value.trim(),
@@ -173,7 +279,7 @@
       };
 
       if (!payload.host || !payload.username || !payload.password) {
-        resultEl.innerHTML =
+        testResult.innerHTML =
           '<div class="alert alert-warning">Bitte Host, User und Passwort eintragen.</div>';
         return;
       }
@@ -185,21 +291,23 @@
         const response = await homebridge.request('/test-connection', payload);
 
         if (response.ok) {
-          let products = '';
-          if (response.productNames && response.productNames.length) {
-            products = '<br><small class="text-muted">Produkte: ' +
-              response.productNames.join(', ') + '</small>';
-          }
-          resultEl.innerHTML =
+          wizardState.connection = payload;
+
+          testResult.innerHTML =
             '<div class="alert alert-success">' +
             '<strong>✓ Verbindung erfolgreich</strong><br>' +
-            response.message + products +
+            response.message +
             '</div>' +
             '<div class="text-center" style="margin-top: 1rem;">' +
-            '<button class="btn btn-success" disabled>Weiter zu Schritt 2 (Phase C — noch nicht implementiert)</button>' +
+            '<button id="nextToStep2" class="btn btn-success">Weiter zu Schritt 2 →</button>' +
             '</div>';
+
+          document.getElementById('nextToStep2').addEventListener('click', () => {
+            showStep(2);
+            loadDevices();
+          });
         } else {
-          resultEl.innerHTML =
+          testResult.innerHTML =
             '<div class="alert alert-danger">' +
             '<strong>✗ Verbindung fehlgeschlagen</strong><br>' +
             (response.error || 'Unbekannter Fehler') +
@@ -208,7 +316,7 @@
             '</div>';
         }
       } catch (err) {
-        resultEl.innerHTML =
+        testResult.innerHTML =
           '<div class="alert alert-danger">' +
           '<strong>Server-Fehler:</strong> ' + (err.message || String(err)) +
           '</div>';
@@ -217,5 +325,133 @@
         testBtn.innerHTML = 'Verbindung testen';
       }
     });
+
+    // ============ Step 2 — Device Discovery ============
+    async function loadDevices() {
+      deviceList.innerHTML =
+        '<div class="text-center text-muted" style="padding: 2rem;">' +
+        '<span class="spinner-border spinner-border-sm"></span> Frage FritzBox-Geräteliste ab…' +
+        '</div>';
+
+      try {
+        const response = await homebridge.request('/discover-devices', wizardState.connection);
+
+        if (!response.ok) {
+          deviceList.innerHTML =
+            '<div class="alert alert-danger">Fehler beim Abrufen der Geräte: ' +
+            (response.error || 'unbekannt') + '</div>';
+          return;
+        }
+
+        wizardState.discoveredDevices = response.devices || [];
+
+        if (wizardState.discoveredDevices.length === 0) {
+          deviceList.innerHTML =
+            '<div class="alert alert-warning">Keine Smart-Home-Geräte auf der FritzBox gefunden.</div>';
+          return;
+        }
+
+        renderDevices();
+      } catch (err) {
+        deviceList.innerHTML =
+          '<div class="alert alert-danger">Server-Fehler: ' + (err.message || String(err)) + '</div>';
+      }
+    }
+
+    function renderDevices() {
+      const accTypeOptions = [
+        { value: 'thermostat', label: 'Thermostat (HKR)' },
+        { value: 'lightbulb', label: 'Lampe' },
+        { value: 'switch', label: 'Steckdose / Schalter' },
+        { value: 'temperature', label: 'Temperatur-Sensor' },
+        { value: 'contact', label: 'Fenster-/Tür-Sensor' },
+        { value: 'button', label: 'Taster' },
+        { value: 'energy-temperature', label: 'Energy-Reader (OBIS Sub-AIN)' },
+        { value: 'energy-meter', label: 'Energy-Meter (Outlet, Eve)' },
+        { value: 'skip', label: '— ignorieren —' },
+      ];
+
+      const html = wizardState.discoveredDevices.map((d) => {
+        // Default-Selection: include if accType detected (not 'unknown' / 'skip')
+        const defaultInclude = d.accType !== 'unknown' && d.accType !== 'skip';
+        if (!wizardState.deviceSelections[d.ain]) {
+          wizardState.deviceSelections[d.ain] = {
+            include: defaultInclude,
+            accType: d.accType,
+            name: d.name,
+          };
+        }
+        const sel = wizardState.deviceSelections[d.ain];
+
+        const optionsHtml = accTypeOptions.map((o) =>
+          '<option value="' + o.value + '"' + (o.value === sel.accType ? ' selected' : '') + '>' +
+          o.label + '</option>'
+        ).join('');
+
+        const inactiveClass = sel.include ? '' : ' inactive';
+
+        // Build feature badges
+        const badges = [];
+        if (d.flags.hasBattery) badges.push('<span class="badge bg-secondary">Batterie</span>');
+        if (d.flags.hasTemperature) badges.push('<span class="badge bg-info">Temperatur</span>');
+        if (d.flags.hasPowermeter) badges.push('<span class="badge bg-warning text-dark">Powermeter</span>');
+        if (d.flags.hasColorcontrol) badges.push('<span class="badge bg-success">Farbe</span>');
+        if (d.flags.isObisSubain) badges.push('<span class="badge bg-primary">OBIS ' +
+          (d.flags.obisDirection === 'consumption' ? '1.x' : '2.x') + '</span>');
+        if (!d.online) badges.push('<span class="badge bg-danger">OFFLINE</span>');
+
+        return `
+          <div class="device-card${inactiveClass}" data-ain="${d.ain}">
+            <div class="device-header">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input include-toggle"
+                       id="inc-${d.ain}" ${sel.include ? 'checked' : ''}>
+              </div>
+              <div class="device-name">
+                ${escapeHtml(d.name)}
+                <span class="device-ain">${d.ain}</span>
+              </div>
+              <div>
+                <select class="form-select form-select-sm acctype-select" style="min-width: 200px;">
+                  ${optionsHtml}
+                </select>
+              </div>
+            </div>
+            <div class="device-meta">
+              ${badges.join(' ')}
+              <em>${escapeHtml(d.reasonDe)}</em>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      deviceList.innerHTML = html;
+
+      // Wire up event handlers
+      deviceList.querySelectorAll('.device-card').forEach((card) => {
+        const ain = card.getAttribute('data-ain');
+        const checkbox = card.querySelector('.include-toggle');
+        const select = card.querySelector('.acctype-select');
+
+        checkbox.addEventListener('change', () => {
+          wizardState.deviceSelections[ain].include = checkbox.checked;
+          card.classList.toggle('inactive', !checkbox.checked);
+        });
+
+        select.addEventListener('change', () => {
+          wizardState.deviceSelections[ain].accType = select.value;
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    backTo1.addEventListener('click', () => showStep(1));
+    goTo3.addEventListener('click', () => showStep(3));
+    backTo2.addEventListener('click', () => showStep(2));
   })();
 </script>
