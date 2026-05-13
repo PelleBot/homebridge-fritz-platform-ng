@@ -1,26 +1,26 @@
-# Roadmap — @pellebot/homebridge-fritz-platform
+# Roadmap — @pellebot/homebridge-fritz-platform-hb2
 
-Ausgehend vom aktuellen Stand: ein funktionsfähiger HB-2.0-Minimal-Patch-Fork läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren. Code ist in `feat/hb2-minimal-patch` mit 9 Commits, noch nicht öffentlich gepublished.
+Stand 2026-05-13 — **v1.0.0 released** als erstes stabiles Production-Tag. Plugin läuft produktiv auf einem M4-Mac mit 12 DECT-Thermostaten, 1 Lampe, 2 Tempsensoren, ISKRA-Smart-Meter über FRITZ!Smart Energy 250 OBIS-Reader, und Router-Switches für Gast-WLAN + WPS.
 
 **Distribution-Modell:**
-- GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform-ng` (oder gewähltem Namen)
-- npm-Paket: **`@pellebot/homebridge-fritz-platform`**, anfangs nur unter `beta`-Tag (technisch im Index, aber nicht als "latest" — frühe Nutzer brauchen explizit `@beta`)
-- Migration zu `latest`-Tag nach 2-4 Wochen produktiver Bestätigung
+- GitHub-Repo: **public** unter `PelleBot/homebridge-fritz-platform-ng`
+- npm-Paket: **`@pellebot/homebridge-fritz-platform-hb2`** ab v1.0.0 mit `latest`-Tag
 
-Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bevor Phase 1+** an die Community geht.
+Die Roadmap ist in Phasen organisiert. **Phase 0 (Public Release) ist abgeschlossen.** Phasen 1-3 sind iterativer Maintenance-Aufwand.
 
 ---
 
-## Phase 0 — GitHub-Setup & Erstes Public Release
+## Phase 0 — GitHub-Setup & Erstes Public Release ✅ DONE
 
-*Ziel: das Plugin ist auf GitHub + npm öffentlich, mit minimaler Dokumentation, läuft für jeden HB-2.0-Nutzer ohne Konfigurations-Schmerzen.*
+*Ziel erreicht: Plugin ist auf GitHub + npm öffentlich, mit Production-Doku, Production-Tag v1.0.0.*
 
 ### 0.1 Repository-Initialisierung
 
-- [ ] Maintainer entscheidet finalen Repo-Namen + npm-Paket-Namen (Vorschlag: `homebridge-fritz-platform-ng` oder `@PelleBot/homebridge-fritz-platform-ng`)
-- [ ] Neues GitHub-Repo unter `PelleBot/<name>` erstellen (public, MIT-License erbt von Upstream)
-- [ ] Lokales Repo pushen, `feat/hb2-minimal-patch` als `main` setzen oder als Default-Branch konfigurieren
-- [ ] Tag `v6.1.0-hb2patch.0` für aktuellen Stand setzen (markiert "running productively on M4")
+- [x] Repo-Name fixiert: `PelleBot/homebridge-fritz-platform-ng`
+- [x] npm-Paket: `@pellebot/homebridge-fritz-platform-hb2` ab v1.0.0
+- [x] GitHub-Repo unter `PelleBot/homebridge-fritz-platform-ng` (public, MIT)
+- [x] Lokales Repo gepushed, `main` ist Default
+- [x] Tag `v1.0.0` als Production-Release-Marker
 
 ### 0.2 Branch-Protection & CI-Skeleton
 
@@ -55,10 +55,9 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 
 - [ ] npm-Account-Setup, 2FA aktiviert
 - [ ] **Scope-Reservierung**: `@pellebot/*` scope auf npm anlegen (kostenfrei für public packages)
-- [ ] `.npmignore` checken — keine `.git`, `node_modules`, Test-Configs, lokale Backups, `homebridge-fritz-platform-*.tgz`
-- [ ] Erstes Publish: `npm publish --tag beta --access public`
-- [ ] Verifikation: `npm install @pellebot/homebridge-fritz-platform@beta` auf Test-System läuft
-- [ ] Wichtig: NICHT mit `npm publish` (ohne `--tag beta`) — sonst wird `latest`-Tag gesetzt, was wir absichtlich vermeiden bis Burn-in durch ist
+- [ ] `.npmignore` checken — keine `.git`, `node_modules`, Test-Configs, lokale Backups, `pellebot-homebridge-fritz-platform-hb2-*.tgz`
+- [ ] Erstes Publish: `npm publish --access public` (v1.0.0 als `latest`)
+- [ ] Verifikation: `npm install @pellebot/homebridge-fritz-platform-hb2` auf Test-System läuft
 
 ---
 
@@ -109,11 +108,13 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 
 *Ziel: das Plugin ist genauso komfortabel zu benutzen wie Upstream-v6 in seinen besten Tagen, plus moderne Verbesserungen.*
 
-### 2.1 Config-Schema — teilweise DONE in v6.1.0-hb2patch.1
+### 2.1 Config-Schema — größtenteils DONE in v1.0.0
 
-- [x] `config.schema.json` von Out-of-Scope-Subsystemen bereinigt (callmonitor, presence, network, wol, childlock, extras, telegram) — 73KB → 32KB (-57%)
-- [ ] Field-Hilfetexte verbessern (z.B. AIN-Format-Erklärung)
-- [ ] energy-meter accType ins Schema aufnehmen (mit Hinweis "experimental, Apple Home zeigt Werte nicht nativ")
+- [x] `config.schema.json` von Out-of-Scope-Subsystemen bereinigt (callmonitor, presence, network, wol, childlock, extras-DNS/phonebook, telegram) — 73KB → 32KB (-57%)
+- [x] `energy-meter` accType ins Schema aufgenommen
+- [x] `energy-temperature` accType ins Schema aufgenommen mit conditional `obisChannel`-Field
+- [ ] Field-Hilfetexte verbessern (z.B. AIN-Format-Erklärung, Sub-AIN-Suffix-Konvention)
+- [ ] Schema-Anchors für Energy-Meter-spezifische Felder mit Documentation-Links
 
 ### 2.2 Accessory-Code-Pfade konsolidieren
 
@@ -122,12 +123,13 @@ Die Roadmap ist in Phasen organisiert; **Phase 0 ist zwingend abzuschließen bev
 - [ ] Keine funktionalen Änderungen, nur Reduktion der Code-Duplikation
 - [ ] Vorher/Nachher LOC-Vergleich dokumentieren
 
-### 2.3 Energy-Meter erweitern
+### 2.3 Energy-Meter erweitern — größtenteils DONE in v1.0.0
 
-- [ ] LightSensor-Variante als Optional-Mode hinter Config-Flag (`displayMode: "lightsensor"`) — für Nutzer die explizit Apple Home stock Display wollen
-- [ ] Strom-Richtung (positiv vs negativ) sauberer auf Bezug/Einspeisung mappen
+- [x] **`energy-temperature` accType** — TemperatureSensor-basiertes Apple-Home-native Display (in v1.0.0 released)
+- [x] **Strom-Richtung sauberer mappen**: AIN-Suffix-basierte Trennung (`-1` = Bezug only positive, `-2` = Einspeisung only negative) — done in v1.0.0
+- [x] **Test mit echter Fritz!Smart Energy 250** — verifiziert mit produktiver ISKRA-Stromzähler-Konfiguration
 - [ ] Watt-Werte glätten (Moving Average optional) gegen FritzBox-Spikes
-- [ ] Test mit echter Fritz!Smart Energy 250 sobald jemand aus der Community Zugriff hat
+- [ ] Sub-AIN-Auto-Discovery: Energy 250 erkennen und automatisch die 4 OBIS-Tiles vorschlagen
 
 ### 2.4 Performance & Observability
 

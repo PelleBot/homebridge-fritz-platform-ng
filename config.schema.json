@@ -658,10 +658,45 @@
                 "enum": [
                   "smoke"
                 ]
+              },
+              {
+                "title": "Energy Meter (Outlet, Eve-only display)",
+                "enum": [
+                  "energy-meter"
+                ]
+              },
+              {
+                "title": "Energy Temperature (TemperatureSensor, native Home App display)",
+                "enum": [
+                  "energy-temperature"
+                ]
               }
             ],
             "required": true,
-            "description": "The accessory type of the device."
+            "description": "The accessory type of the device. Use 'energy-temperature' for Fritz!Smart Energy 250 OBIS sub-AINs to get a numeric value tile in Apple Home (the displayed °C unit must be mentally remapped to W or kWh)."
+          },
+          "obisChannel": {
+            "title": "OBIS Channel",
+            "type": "string",
+            "condition": {
+              "functionBody": "try { return model.smarthome[arrayIndices[0]].accType === 'energy-temperature' } catch(e){ return false }"
+            },
+            "oneOf": [
+              {
+                "title": "Current Power (W)",
+                "enum": [
+                  "current_power"
+                ]
+              },
+              {
+                "title": "Total Energy (kWh)",
+                "enum": [
+                  "total_energy"
+                ]
+              }
+            ],
+            "default": "current_power",
+            "description": "Which value to display in the TemperatureSensor. Configure one smarthome entry per (sub-AIN x channel) combination to get separate tiles, e.g. Aktueller Verbrauch (AIN-1, current_power), Gesamt Verbrauch (AIN-1, total_energy), Aktuelle Einspeisung (AIN-2, current_power), Gesamt Einspeisung (AIN-2, total_energy)."
           }
         }
       }

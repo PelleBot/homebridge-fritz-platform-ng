@@ -63,7 +63,7 @@ Häufige Fehlerbilder:
 |---|---|
 | `Can not find switch data` | Gerät hat keinen schaltbaren Relais-Ausgang (z.B. Energy 250) — falscher `accType` in Config |
 | `Can not find device with AIN: ...` | AIN-Tippfehler in Config, oder Gerät ist beim Plugin-Start offline an der FritzBox |
-| `TypeError: Cannot read properties of undefined (reading 'UUID')` | Custom-Characteristic nicht registriert — sollte mit v6.1.0-hb2patch.1+ nicht mehr auftreten. Falls doch: Plugin-Version prüfen (`npm ls -g @pellebot/homebridge-fritz-platform`), ggf. neu installieren |
+| `TypeError: Cannot read properties of undefined (reading 'UUID')` | Custom-Characteristic nicht registriert — sollte mit v6.1.0-hb2patch.1+ nicht mehr auftreten. Falls doch: Plugin-Version prüfen (`npm ls -g @pellebot/homebridge-fritz-platform-hb2`), ggf. neu installieren |
 | `ECONNREFUSED` / TLS-Fehler beim Start | FritzBox-IP, Port (49443 für TR-064 SSL), oder TR-064-Zugriff in FritzBox-UI nicht aktiviert |
 | Polling läuft, aber Werte aktualisieren nicht | FritzBox-User hat keine "Smart Home"-Berechtigung → in FritzBox-UI prüfen |
 

@@ -1,6 +1,43 @@
 # Changelog
 
-> **Hinweis zum Format:** Dieser Changelog setzt die Versionierung des Original-Plugins (`SeydX/homebridge-fritz-platform`, Maintainership eingestellt nach v6.0.19) fort. Ab `6.1.0-hb2patch.0` werden die Releases unter dem npm-Paket `@pellebot/homebridge-fritz-platform` veröffentlicht.
+> **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
+
+# v1.0.0 — 2026-05-13 (First Production Release)
+
+**Erstes stabiles Release** des `@pellebot/homebridge-fritz-platform-hb2`. Setzt die Code-Linie der `6.1.0-hb2patch.x` Pre-Releases fort, jetzt mit unabhängiger Versionierung und neuem npm-Paketnamen.
+
+## Breaking Changes ggü. v6.1.0-hb2patch.1
+
+- **npm-Paket umbenannt**: `@pellebot/homebridge-fritz-platform` → `@pellebot/homebridge-fritz-platform-hb2`. Der `-hb2`-Suffix macht explizit, dass dies die Homebridge-2.0-Linie ist. Migration:
+  ```
+  sudo npm uninstall -g @pellebot/homebridge-fritz-platform
+  sudo npm install -g @pellebot/homebridge-fritz-platform-hb2
+  ```
+  Die `registerPlatform`-Kennung (`homebridge-fritz-platform`) ändert sich **nicht** — bestehende cached Accessories werden weiter gematched, kein iPhone-Re-Pairing.
+- **Versionierung zurückgesetzt** auf `1.0.0`. Damit endet die Mitführung der Upstream-Version `6.x` aus dem Original. Eigene SemVer-Linie ab jetzt.
+
+## Bug Fixes
+
+- **Router-Companion-Switches (Wifi-Toggles, WPS, DECT, AB, Reconnect) reagierten nicht auf Tippen.** Root Cause: `case 'extra'` war beim Phase-1-Cleanup fälschlich als "out-of-scope" eingestuft und aus dem `platform.js`-Dispatch entfernt worden. Dadurch wurde `ExtrasAccessory` nie instanziiert, der `onSet`-Handler für die standardmäßige `On`-Charakteristik der Switch-Services nie registriert. HomeKit-Taps liefen ins Leere, die Tiles flipten zurück. Fix: `case 'extra'` wieder eingefügt, `ExtrasAccessory` wired den Switch-Service korrekt an `RouterHandler.set/get/change`.
+- **WPS-State wurde falsch interpretiert.** `GetWPSInfo` liefert nach abgebrochenen WPS-Sessions häufig `WPSStatus: 'err_common'`. Die alte Logik `state = status !== 'off'` matchte das als "WPS ist an", obwohl der WPS-Modus in Wahrheit gestoppt war. Fix: Auf `WPSMode`-basierte Erkennung umgestellt — Tile ist nur ON wenn der Mode aktiv läuft (`pbc` / `pin`).
+
+## Neuerungen
+
+- **Neuer accType `energy-temperature`** für FRITZ!Smart Energy 250 OBIS-Reader (und ähnliche HAN-FUN-Stromzähler-Gateways). Exponiert die Powermeter-Werte als `TemperatureSensor`-Service, damit Apple Home den Zahlenwert nativ als Tile anzeigt und Verlaufsgraphen plottet — ohne Eve-App-Abhängigkeit. Config-Feld `obisChannel: 'current_power' | 'total_energy'` wählt zwischen aktueller Leistung (W) und kumulierter Energie (kWh). Trennung von Bezug/Einspeisung erfolgt automatisch über den AIN-Suffix: `-1` (OBIS 1.x) zeigt nur positive Power-Werte (Bezug), `-2` (OBIS 2.x) zeigt `|negative|` Power-Werte (Einspeisung). Trade-off: HomeKit zeigt die Einheit als `°C` an — semantisch falsch, aber funktional korrekt; Tile in der Home-App umbenennen für klare Lesart.
+- **Energy-meter accType weiterhin verfügbar** als Alternative für Nutzer die lieber das Outlet-Tile mit Eve-App-Charakteristiken haben. Beide accTypes können parallel konfiguriert sein.
+
+## Doku-Update
+
+- `README.md` neu strukturiert: Production-Status, Geräte-Tabelle, Architektur-Erklärung, Migration-Guide für Energy 250. Lineage-Sektion (SeydX-Credit) in den Footer verschoben.
+- `CHANGELOG.md`: Versionierungs-Hinweis aktualisiert auf `-hb2`-Paket.
+- `DEBUG.md`, `CONTRIBUTING.md`: Paketnamen-Referenzen auf `-hb2`.
+
+## Bekannte Limitationen (unverändert)
+
+- **Apple Home Energy-Display nicht nativ**: Apple HomeKit hat keine "Power Meter"-Service-Klasse. Workaround über `energy-temperature` (TemperatureSensor-Missbrauch) ist der best-möglich Stand.
+- **fakegato-history Stub**: keine historischen Eve-App-Graphen. Live-Werte funktionieren, Apple Home plottet Verlaufsgraphen für `energy-temperature`-Tiles nativ.
+
+---
 
 # v6.1.0-hb2patch.1 — 2026-05-11 (Polish-Release, beta)
 

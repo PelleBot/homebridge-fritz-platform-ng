@@ -680,6 +680,75 @@ class Handler {
 
         return state;
       }
+      case 'smarthome-energy-temperature': {
+        // Energy-temperature: TemperatureSensor used to expose either current
+        // power (W) or cumulative energy (kWh) as a numeric value in HomeKit.
+        // The mapping of obisChannel -> powermeter field happens here.
+        let service = accessory.getService(this.api.hap.Service.TemperatureSensor);
+
+        try {
+          let device = this.smarthomeList.devices.find((device) =>
+            device.ain.includes(accessory.context.config.ain)
+          );
+          logger.debug(device, `${accessory.displayName} (${subtype})`);
+
+          if (device) {
+            accessory.context.config.ain = device.ain;
+
+            if (device.online) {
+              if (device.powermeter) {
+                const channel = accessory.context.config.obisChannel || 'current_power';
+                let value = 0;
+
+                if (channel === 'current_power') {
+                  // @seydx/fritzbox normalizes power: mW -> watts.
+                  // For OBIS readers the live `power` value is the household
+                  // NET load mirrored on both sub-AINs; AVM's sign convention
+                  // is power > 0 = consumption (Bezug), power < 0 = feed-in
+                  // (Einspeisung). We split it by AIN suffix so each tile
+                  // shows only its own direction (0 when the meter is on the
+                  // other side):
+                  //   -1 (OBIS 1.x, Verbrauch) -> only positive values
+                  //   -2 (OBIS 2.x, Einspeisung) -> only |negative| values
+                  const rawPower = device.powermeter.power || 0;
+                  const ain = device.ain || accessory.context.config.ain || '';
+                  if (ain.endsWith('-1')) {
+                    value = rawPower > 0 ? rawPower : 0;
+                  } else if (ain.endsWith('-2')) {
+                    value = rawPower < 0 ? -rawPower : 0;
+                  } else {
+                    // No directional sub-AIN suffix — fall back to absolute.
+                    value = Math.abs(rawPower);
+                  }
+                } else if (channel === 'total_energy') {
+                  // energy: Wh -> kWh (already normalized by @seydx/fritzbox)
+                  // The cumulative value is per-direction and differs per sub-AIN.
+                  value = device.powermeter.energy || 0;
+                }
+
+                service.getCharacteristic(this.api.hap.Characteristic.CurrentTemperature).updateValue(value);
+              } else {
+                logger.warn(
+                  'Can not find powermeter data — sub-AIN (-1 / -2) correct?',
+                  `${accessory.displayName} (${subtype})`
+                );
+              }
+            } else {
+              logger.warn('Device offline!', `${accessory.displayName} (${subtype})`);
+            }
+          } else {
+            logger.warn(
+              `Can not find device with AIN: ${accessory.context.config.ain}`,
+              `${accessory.displayName} (${subtype})`
+            );
+          }
+        } catch (err) {
+          logger.warn('An error occured during getting state!', `${accessory.displayName} (${subtype})`);
+          logger.error(err, `${accessory.displayName} (${subtype})`);
+        }
+
+        return true;
+      }
       case 'smarthome-energy-meter': {
         // Energy meter is a read-only sensor exposed as an Outlet service.
         // The On characteristic stays locked-true; we only push powermeter values.

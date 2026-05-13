@@ -143,11 +143,11 @@ Validation:
 
 ---
 
-## Bekannte Fallstricke (Stand 2026-05-11, v6.1.0-hb2patch.1)
+## Bekannte Fallstricke (Stand 2026-05-13, v1.0.0)
 
 1. **fakegato-history Stub.** Keine Eve-App-History-Graphen. Wenn jemand fragt: README/CHANGELOG verweisen, weiterer Fix erst wenn ein HAP-v2-kompatibler Fork von fakegato existiert ODER wir vendoren einen eigenen.
 
-2. **Apple Home zeigt keine Eve-Charakteristiken.** Für Energy-Meter, Power-Consumption etc.: User auf Eve App verweisen. **Keine "LightSensor-Abuse"-Lösungen** vorschlagen (Anti-Pattern).
+2. **Apple Home zeigt keine Eve-Charakteristiken.** Für Energy-Meter (Outlet-basiert) braucht's die Eve App. **Workaround in v1.0.0:** Der `energy-temperature`-accType nutzt einen TemperatureSensor-Service, damit Apple Home den Zahlenwert nativ als Zahlen-Tile (Einheit °C) anzeigt — bewusst akzeptierter Trade-off für Sichtbarkeit ohne Eve.
 
 3. **Doppelter `master: true`-Router-Eintrag in vielen Productive-Configs.** Das Plugin akzeptiert nur den ersten — wenn ein Issue sich darüber wundert, das ist by-design im RouterSetup-Code.
 
@@ -155,7 +155,7 @@ Validation:
 
 5. **AINs mit Whitespace** (z.B. `"15282 0924403"`) werden in `smarthome.config.js` per `replace(/\s/g, '')` zu `"152820924403"` normalisiert. Bei energy-meter Sub-AINs (`"15282 0924403-1"`) bleibt das `-1` erhalten (nur Whitespace wird entfernt).
 
-6. **`registerPlatform`-Kennung vs npm-Paket-Name.** Plugin registriert sich in `index.mjs` als `'homebridge-fritz-platform'` (erster Arg), obwohl das npm-Paket `@pellebot/homebridge-fritz-platform` heißt. **Intentional**: cached Accessories aus dem Upstream-Plugin (mit `plugin: 'homebridge-fritz-platform'`-Feld) bleiben matched, kein iPhone-Re-Pairing nötig. Nicht ändern ohne Migration-Plan für bestehende User.
+6. **`registerPlatform`-Kennung vs npm-Paket-Name.** Plugin registriert sich in `index.mjs` als `'homebridge-fritz-platform'` (erster Arg), obwohl das npm-Paket `@pellebot/homebridge-fritz-platform-hb2` heißt. **Intentional**: cached Accessories aus dem Upstream-Plugin und aus den `6.1.0-hb2patch.x` Pre-Releases (mit `plugin: 'homebridge-fritz-platform'`-Feld) bleiben matched, kein iPhone-Re-Pairing nötig. Nicht ändern ohne Migration-Plan für bestehende User.
 
 7. **Config UI X zeigt nur was im `config.schema.json` ist.** Wenn ein neues Feld im Plugin-Code dazukommt, MUSS es auch ins Schema, sonst wird's nicht editierbar in der UI (User müsste die JSON manuell bearbeiten).
 

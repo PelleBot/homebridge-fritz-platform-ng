@@ -47,7 +47,7 @@ Erwartung: XML mit `<root>`-Tag und Service-Liste. Wenn `401 Unauthorized` zurü
 ## 4. Plugin installieren
 
 ```bash
-npm install -g @pellebot/homebridge-fritz-platform@beta
+npm install -g @pellebot/homebridge-fritz-platform-hb2
 ```
 
 ## 5. Minimal-Config einsetzen

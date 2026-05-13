@@ -75,3 +75,5 @@ homebridge-test/
 config.local.json
 *.config.local
 
+.commit-msg-*.txt
+.tag-msg-*.txt
