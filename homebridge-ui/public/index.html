@@ -567,8 +567,53 @@
 
     const goTo4 = document.getElementById('goTo4');
     const backTo3 = document.getElementById('backTo3');
-    goTo4.addEventListener('click', () => showStep(4));
+    goTo4.addEventListener('click', () => {
+      showStep(4);
+      hydrateRouterSwitches();
+    });
     backTo3.addEventListener('click', () => showStep(3));
+
+    const goTo5 = document.getElementById('goTo5');
+    const backTo4 = document.getElementById('backTo4');
+    goTo5.addEventListener('click', () => showStep(5));
+    backTo4.addEventListener('click', () => showStep(4));
+
+    // ============ Step 4 — Router Switches ============
+    // Pre-fill checkboxes from existing master.options (if user is editing
+    // an existing config) and wire up change handlers to wizardState.
+    function hydrateRouterSwitches() {
+      // Read existing config to pre-check anything that was on before
+      (async () => {
+        try {
+          const allConfig = await homebridge.getPluginConfig();
+          const fritz = (allConfig || []).find((c) => c && c.platform === 'FritzPlatform');
+          const master = fritz && fritz.devices && fritz.devices.find((d) => d.master === true);
+          const opts = master && master.options;
+
+          document.querySelectorAll('.router-switch').forEach((cb) => {
+            const key = cb.getAttribute('data-key');
+            // If wizardState already has a value (user navigated back), use that
+            if (typeof wizardState.routerSwitches[key] === 'boolean') {
+              cb.checked = wizardState.routerSwitches[key];
+            } else if (opts && opts[key] === 'switch') {
+              cb.checked = true;
+              wizardState.routerSwitches[key] = true;
+            } else {
+              wizardState.routerSwitches[key] = false;
+            }
+          });
+        } catch (err) {
+          // No existing config — nothing to prefill, all stay unchecked.
+        }
+      })();
+    }
+
+    document.querySelectorAll('.router-switch').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const key = cb.getAttribute('data-key');
+        wizardState.routerSwitches[key] = cb.checked;
+      });
+    });
 
     // ============ Step 3 — Energy 250 Special Path ============
     function renderEnergy250() {
