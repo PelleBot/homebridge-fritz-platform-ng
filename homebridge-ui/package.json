@@ -1,0 +1,4 @@
+{
+  "type": "commonjs",
+  "//": "Override the parent package's type: module setting so that homebridge-ui/server.js can use require(). The HomebridgePluginUiServer from @homebridge/plugin-ui-utils is published as CommonJS and is easiest to consume via require()."
+}

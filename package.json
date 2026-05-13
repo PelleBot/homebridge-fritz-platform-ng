@@ -49,6 +49,7 @@
     "homebridge": "^1.6.0 || ^2.0.0"
   },
   "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.0.0",
     "@seydx/fritzbox": "^2.3.1",
     "fakegato-history": "0.6.2",
     "form-data": "^4.0.0",

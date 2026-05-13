@@ -1,0 +1,78 @@
+<!--
+  Custom UI for @pellebot/homebridge-fritz-platform-hb2
+
+  Loaded by Homebridge Config UI X when the user opens the plugin's settings.
+  The global `window.homebridge` object provides IPC to homebridge-ui/server.js
+  via homebridge.request(endpoint, payload).
+
+  Phase A baseline: a "Hello" page with a server-ping button to verify the
+  Custom-UI infrastructure works end-to-end. Later phases add the multi-step
+  wizard for FritzBox configuration.
+-->
+<div class="card">
+  <div class="card-body">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <img src="https://raw.githubusercontent.com/PelleBot/homebridge-fritz-platform-ng/main/branding/Icon.png"
+           alt="Plugin Logo"
+           style="max-width: 120px; border-radius: 16px;">
+      <h3 style="margin-top: 1rem;">Homebridge FRITZ!Box Platform (HB2)</h3>
+      <p class="text-muted">Setup Wizard — Phase A Foundation Preview</p>
+    </div>
+
+    <div class="alert alert-info">
+      <strong>Phase A — Foundation Test</strong><br>
+      Diese Seite ersetzt das bisherige JSON-Schema-Formular. Klick unten auf
+      <em>Server-Ping</em> um zu prüfen ob die Custom-UI-Server-Verbindung
+      funktioniert. Wenn ja, kommt in Phase B der echte Wizard-Flow.
+    </div>
+
+    <div class="text-center" style="margin: 2rem 0;">
+      <button id="pingBtn" class="btn btn-primary btn-lg">
+        Server-Ping
+      </button>
+    </div>
+
+    <div id="pingResult" style="margin-top: 1rem;"></div>
+
+    <hr>
+
+    <details>
+      <summary style="cursor: pointer;">Fallback: klassisches JSON-Form anzeigen</summary>
+      <div style="margin-top: 1rem;">
+        <p class="text-muted">
+          Solange der Wizard im Aufbau ist, kannst du die Config jederzeit auch
+          per JSON-Editor von Config UI X bearbeiten — oben rechts in der
+          Plugin-Settings-Toolbar gibt's einen Toggle "JSON".
+        </p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const pingBtn = document.getElementById('pingBtn');
+    const resultEl = document.getElementById('pingResult');
+
+    pingBtn.addEventListener('click', async () => {
+      resultEl.innerHTML = '<div class="text-muted">Pinging server…</div>';
+      pingBtn.disabled = true;
+
+      try {
+        const response = await homebridge.request('/ping');
+        resultEl.innerHTML =
+          '<div class="alert alert-success">' +
+          '<strong>✓ OK</strong><br>' +
+          '<code>' + JSON.stringify(response, null, 2) + '</code>' +
+          '</div>';
+      } catch (err) {
+        resultEl.innerHTML =
+          '<div class="alert alert-danger">' +
+          '<strong>✗ Fehler:</strong> ' + (err.message || String(err)) +
+          '</div>';
+      } finally {
+        pingBtn.disabled = false;
+      }
+    });
+  })();
+</script>

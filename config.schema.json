@@ -2,6 +2,7 @@
   "pluginAlias": "FritzPlatform",
   "pluginType": "platform",
   "singular": true,
+  "customUi": true,
   "footerDisplay": "For documentation please see [GitHub repository](https://github.com/PelleBot/homebridge-fritz-platform-ng)",
   "schema": {
     "name": {
