@@ -198,6 +198,22 @@
         kumulierte Energie (kWh) je Richtung (Bezug + Einspeisung) anlegen.
       </div>
 
+      <div id="energy250DisplaySelector" style="margin-top: 1rem; display: none;">
+        <label style="font-weight: 600;">Anzeige-Typ in Apple Home:</label>
+        <div class="form-check" style="margin-top: 0.5rem;">
+          <input type="radio" name="energyDisplay" id="energyDisplay-temp" class="form-check-input" value="energy-temperature" checked>
+          <label class="form-check-label" for="energyDisplay-temp">
+            <strong>Temperatur-Sensor (°C)</strong> — bekommt automatisch eigene Tiles im Raum-View. Einheit °C ist semantisch falsch aber prominenter dargestellt.
+          </label>
+        </div>
+        <div class="form-check" style="margin-top: 0.5rem;">
+          <input type="radio" name="energyDisplay" id="energyDisplay-light" class="form-check-input" value="energy-light">
+          <label class="form-check-label" for="energyDisplay-light">
+            <strong>Licht-Sensor (lx)</strong> — Apple Home behandelt sie als passive Sensoren (oben im Status-Bereich). Per Long-Press kannst du sie als Favorit ins Home-Tab holen. Einheit lx ist abstrakter als °C, viele User finden's weniger irreführend.
+          </label>
+        </div>
+      </div>
+
       <div id="energy250Content" style="margin-top: 1rem;">
         <!-- Generated dynamically from wizardState.deviceSelections -->
       </div>
@@ -327,6 +343,7 @@
       discoveredDevices: [],      // raw discovery output from step 2 load
       deviceSelections: {},       // { ain: { include: bool, accType: string } } after step 2
       energyTiles: {},            // { ain: [{ obisChannel, name }, ...] } after step 3
+      energyAccType: 'energy-temperature', // 'energy-temperature' | 'energy-light' — chosen in step 3
       routerSwitches: {},         // { wifi_guest: bool, wps: bool, ... } after step 4
     };
 
@@ -678,8 +695,13 @@
       }
 
       // 2. OBIS Energy 250 tiles from Phase 3 (one entry per (sub-AIN x obisChannel))
+      // The accType is the one selected via the Step-3 display-type radio:
+      // 'energy-temperature' (default, °C tile) or 'energy-light' (lx sensor)
+      const energyAccType = wizardState.energyAccType || 'energy-temperature';
       for (const [ain, tiles] of Object.entries(wizardState.energyTiles || {})) {
-        // Only include if user kept this sub-AIN in Phase 2 (in case they went back)
+        // Only include if user kept this sub-AIN in Phase 2 as energy-temperature
+        // (the wizard always uses energy-temperature in Phase 2 detection — display
+        // type is selected in Phase 3 and applied here at save time)
         const sel = wizardState.deviceSelections[ain];
         if (!sel || !sel.include || sel.accType !== 'energy-temperature') continue;
 
@@ -688,7 +710,7 @@
             active: true,
             name: tile.name,
             ain,
-            accType: 'energy-temperature',
+            accType: energyAccType,
             obisChannel: tile.obisChannel,
           });
         }
@@ -843,7 +865,10 @@
       const obisSelections = Object.entries(wizardState.deviceSelections)
         .filter(([ain, sel]) => sel.include && sel.accType === 'energy-temperature' && /-[12]$/.test(ain));
 
+      const displaySelector = document.getElementById('energy250DisplaySelector');
+
       if (obisSelections.length === 0) {
+        displaySelector.style.display = 'none';
         container.innerHTML =
           '<div class="alert alert-secondary">' +
           'Keine OBIS-Sub-AINs in der Geräte-Auswahl gefunden. ' +
@@ -854,6 +879,21 @@
           '</div>';
         return;
       }
+
+      // Show display-type selector when OBIS tiles are present
+      displaySelector.style.display = 'block';
+
+      // Preselect from wizardState (in case user navigated back)
+      const desiredRadio = wizardState.energyAccType === 'energy-light' ? 'energyDisplay-light' : 'energyDisplay-temp';
+      const radioEl = document.getElementById(desiredRadio);
+      if (radioEl) radioEl.checked = true;
+
+      // Wire change handler
+      document.querySelectorAll('input[name="energyDisplay"]').forEach((r) => {
+        r.addEventListener('change', () => {
+          if (r.checked) wizardState.energyAccType = r.value;
+        });
+      });
 
       // Group OBIS sub-AINs by their base AIN
       const byBase = {};

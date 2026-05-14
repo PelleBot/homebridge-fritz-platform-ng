@@ -680,6 +680,65 @@ class Handler {
 
         return state;
       }
+      case 'smarthome-energy-light': {
+        // Energy-light: LightSensor variant — same data flow as energy-temperature
+        // but uses CurrentAmbientLightLevel (lx) instead of CurrentTemperature (°C)
+        // as the display vehicle. HAP requires lx >= 0.0001, so we clamp 0 -> 0.0001.
+        let service = accessory.getService(this.api.hap.Service.LightSensor);
+
+        try {
+          let device = this.smarthomeList.devices.find((device) =>
+            device.ain.includes(accessory.context.config.ain)
+          );
+          logger.debug(device, `${accessory.displayName} (${subtype})`);
+
+          if (device) {
+            accessory.context.config.ain = device.ain;
+
+            if (device.online) {
+              if (device.powermeter) {
+                const channel = accessory.context.config.obisChannel || 'current_power';
+                let value = 0;
+
+                if (channel === 'current_power') {
+                  const rawPower = device.powermeter.power || 0;
+                  const ain = device.ain || accessory.context.config.ain || '';
+                  if (ain.endsWith('-1')) {
+                    value = rawPower > 0 ? rawPower : 0;
+                  } else if (ain.endsWith('-2')) {
+                    value = rawPower < 0 ? -rawPower : 0;
+                  } else {
+                    value = Math.abs(rawPower);
+                  }
+                } else if (channel === 'total_energy') {
+                  value = device.powermeter.energy || 0;
+                }
+
+                // HAP minimum for CurrentAmbientLightLevel is 0.0001 — clamp 0 to that
+                if (value <= 0) value = 0.0001;
+                service.getCharacteristic(this.api.hap.Characteristic.CurrentAmbientLightLevel).updateValue(value);
+              } else {
+                logger.warn(
+                  'Can not find powermeter data — sub-AIN (-1 / -2) correct?',
+                  `${accessory.displayName} (${subtype})`
+                );
+              }
+            } else {
+              logger.warn('Device offline!', `${accessory.displayName} (${subtype})`);
+            }
+          } else {
+            logger.warn(
+              `Can not find device with AIN: ${accessory.context.config.ain}`,
+              `${accessory.displayName} (${subtype})`
+            );
+          }
+        } catch (err) {
+          logger.warn('An error occured during getting state!', `${accessory.displayName} (${subtype})`);
+          logger.error(err, `${accessory.displayName} (${subtype})`);
+        }
+
+        return true;
+      }
       case 'smarthome-energy-temperature': {
         // Energy-temperature: TemperatureSensor used to expose either current
         // power (W) or cumulative energy (kWh) as a numeric value in HomeKit.

@@ -25,7 +25,7 @@ Production: läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-La
 | FRITZ!Smart Light 500 / FRITZ!DECT 500 (DECT-Lampe) | `lightbulb` | An/Aus, Helligkeit, Farbe |
 | FRITZ!Smart Control 440 (Temperatursensor) | `temperature` | Temperatur, Batterie |
 | FRITZ!DECT 200 / 210 (schaltbare Steckdose) | `switch` | An/Aus + optional Energiemessung |
-| FRITZ!Smart Energy 250 (OBIS-Reader, an ISKRA o.ä.) | `energy-temperature` | Aktuelle Leistung in W, kumulierte Energie in kWh — als TemperatureSensor exposed, von Apple Home nativ als Zahlen-Tile dargestellt |
+| FRITZ!Smart Energy 250 (OBIS-Reader, an ISKRA o.ä.) | `energy-temperature` oder `energy-light` | Aktuelle Leistung in W, kumulierte Energie in kWh — entweder als TemperatureSensor (°C-Tile, prominent im Raum) oder LightSensor (lx-Tile, passive Sensor-Anzeige, per Favorit ins Home-Tab holbar) |
 | FRITZ!Box Router (Master) | (via `options`) | Gast-WLAN-Switch, WPS-Switch, optional weitere Toggles |
 
 ## Architektur
@@ -182,7 +182,12 @@ Für ein typisches PV-Setup mit Bezug + Einspeisung legst du **vier `smarthome[]
 }
 ```
 
-**Wieso TemperatureSensor?** HomeKit hat keinen nativen Service für Leistung oder Energie. TemperatureSensor wird hier als Anzeige-Vehikel "missbraucht": Apple Home rendert den Wert nativ als Zahl, plottet Verlaufsgraphen, und ist auf allen HomeKit-Clients ohne Eve-App-Abhängigkeit sichtbar. **Trade-off:** die Einheit zeigt `°C` an, gemeint sind aber `W` oder `kWh`. In der Home-App das Tile umbenennen ("Aktueller Verbrauch (W)", "Gesamt Einspeisung (kWh)") macht's eindeutig.
+**Wieso TemperatureSensor (oder LightSensor)?** HomeKit hat keinen nativen Service für Leistung oder Energie. Es wird einer der beiden Sensor-Typen als Anzeige-Vehikel "missbraucht":
+
+- **`energy-temperature`** (Standard) — TemperatureSensor mit `°C`-Einheit. Apple Home zeigt's prominent als eigenes Tile im Raum-View.
+- **`energy-light`** — LightSensor mit `lx`-Einheit. Apple Home zeigt's als passiven Sensor (Status-Zeile oben). Per Long-Press → "Im Zuhause anzeigen" als Favorit-Tile aktivierbar. Die `lx`-Einheit ist semantisch genauso falsch wie `°C` — viele empfinden sie aber als weniger irreführend, weil seltener im Alltag verwendet.
+
+Beide werden seit v1.1.1 unterstützt. Standard ist `energy-temperature`. Empfehlung: probier beide aus, behalte was dir besser gefällt. In der Home-App das Tile umbenennen ("Aktueller Verbrauch (W)", "Gesamt Einspeisung (kWh)") macht den Werte-Kontext eindeutig.
 
 **Richtungs-Trennung:** AVM spiegelt den NET-Power-Wert auf beiden Sub-AINs (gleiche Zahl mit Vorzeichen). Das Plugin trennt das anhand des AIN-Suffixes — `-1` zeigt den Wert nur wenn `power > 0` (Bezug), `-2` zeigt `|power|` nur wenn `power < 0` (Einspeisung). Im Ruhe-/Inverse-Zustand zeigt die jeweils andere Kachel `0`.
 

@@ -1,7 +1,7 @@
 'use strict';
 
 const Config = (smarthomeConfig) => {
-  const validTypes = ['switch', 'contact', 'thermostat', 'lightbulb', 'temperature', 'window', 'blind', 'button', 'smoke', 'energy-meter', 'energy-temperature'];
+  const validTypes = ['switch', 'contact', 'thermostat', 'lightbulb', 'temperature', 'window', 'blind', 'button', 'smoke', 'energy-meter', 'energy-temperature', 'energy-light'];
   const validObisChannels = ['current_power', 'total_energy'];
   const validTypesGroup = ['switch', 'lightbulb', 'thermostat', 'switch-lightbulb'];
   const validButtons = [1, 4];

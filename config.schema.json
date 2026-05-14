@@ -667,14 +667,20 @@
                 ]
               },
               {
-                "title": "Energy Temperature (TemperatureSensor, native Home App display)",
+                "title": "Energy Temperature (TemperatureSensor, °C unit)",
                 "enum": [
                   "energy-temperature"
+                ]
+              },
+              {
+                "title": "Energy Light (LightSensor, lx unit)",
+                "enum": [
+                  "energy-light"
                 ]
               }
             ],
             "required": true,
-            "description": "The accessory type of the device. Use 'energy-temperature' for Fritz!Smart Energy 250 OBIS sub-AINs to get a numeric value tile in Apple Home (the displayed °C unit must be mentally remapped to W or kWh)."
+            "description": "The accessory type of the device. Use 'energy-temperature' or 'energy-light' for Fritz!Smart Energy 250 OBIS sub-AINs — both expose the value as a numeric sensor tile in Apple Home. 'energy-light' uses LightSensor (lx unit) which is a passive sensor and can be added to favorites; 'energy-temperature' uses TemperatureSensor (°C unit) which gets its own tile by default."
           },
           "obisChannel": {
             "title": "OBIS Channel",

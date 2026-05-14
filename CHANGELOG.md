@@ -2,6 +2,36 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.1.1 — 2026-05-14 (LightSensor variant for energy tiles)
+
+**Neuer accType `energy-light` als Alternative zu `energy-temperature`.** Beide nutzen dieselbe OBIS-Datenflow-Logik (Fritz!Smart Energy 250 sub-AINs), aber `energy-light` rendert die Werte als **LightSensor** (Einheit `lx`) statt **TemperatureSensor** (Einheit `°C`).
+
+## Hintergrund
+
+Apple Home rendert die zwei Sensor-Typen unterschiedlich:
+- **TemperatureSensor:** prominentes Tile im Raum-View, °C-Einheit
+- **LightSensor:** "passive sensor" im Status-Bereich oben, lx-Einheit — per Long-Press als Favorit ins Home-Tab holbar
+
+Beide Einheiten (°C, lx) sind semantisch falsch für Energie-Werte. Manche Nutzer empfinden `lx` als abstrakter und weniger irreführend als `°C` (das auf Temperaturmessung schließen lässt). Außerdem kollidiert LightSensor weniger mit echten Temperatur-Sensoren wenn man viele davon hat (Thermostate etc.).
+
+## Neuerungen
+
+- **Neuer accType `energy-light`** (siehe `src/accessories/smarthome/energy-light/energy-light.accessory.js`). Eigenständiger Service, parallel zu `energy-temperature`. Beide bleiben dauerhaft verfügbar.
+- **`config.schema.json`** mit neuer Option in der accType-Auswahl: "Energy Light (LightSensor, lx unit)".
+- **Wizard Schritt 3** ergänzt um **Display-Auswahl** (Radio-Buttons): "Temperatur-Sensor (°C)" oder "Licht-Sensor (lx)". Pro Tile gilt die Auswahl beim Save.
+- **Auto-Migration:** wenn ein Accessory den accType von `energy-temperature` zu `energy-light` wechselt (z.B. via Wizard-Re-Run), entfernt das Plugin den alten TemperatureSensor-Service sauber vor dem Anlegen des LightSensors.
+
+## Breaking Changes
+
+Keine. Bestehende `energy-temperature`-Configs laufen unverändert weiter. Wer auf LightSensor wechseln möchte: pro Smart-Home-Eintrag den `accType`-String von `"energy-temperature"` auf `"energy-light"` ändern, HB neu starten.
+
+## Bekannte Limitationen
+
+- **HAP minValue für AmbientLightLevel:** 0.0001 (nicht 0 möglich). Bei aktuellem Wert = 0 W (keine Last oder keine Einspeisung) zeigt das Tile `0.0001 lx` statt `0 lx`. Funktional kein Unterschied, kosmetisch leicht verwirrend für die Sekunde wo nix fließt.
+- **LightSensor in Apple Home Status-Bereich:** standardmäßig wird das Tile nicht direkt im Raum angezeigt sondern in der Status-Zeile oben. Per Long-Press → "Im Zuhause anzeigen" als Favorit setzbar (siehe README).
+
+---
+
 # v1.1.0 — 2026-05-13 (Setup-Wizard Release)
 
 **Neue Custom-UI mit Setup-Wizard.** Config UI X öffnet beim Klick auf das Plugin-Settings-Icon ab dieser Version unseren geführten 5-Schritt-Wizard statt des bisherigen JSON-Schema-Formulars. Das macht das Erstsetup deutlich freundlicher — kein Raten mehr bei Feldern wie `accType`, `obisChannel` oder AIN-Format.
