@@ -49,58 +49,83 @@ exports.registerWith = (hap) => {
   // History-related (used by fakegato-history; our stub no-ops them but
   // accessory code may still reference these as registered types).
   declare('ResetTotal', 'Reset Total', 'E863F112-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint32', unit: 'seconds', perms: PR_EV_PW,
+    format: 'uint32',
+    unit: 'seconds',
+    perms: PR_EV_PW,
   });
   declare('HistoryStatus', 'History Status', 'E863F116-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: PR_EV_PW,
+    format: 'data',
+    perms: PR_EV_PW,
   });
   declare('HistoryEntries', 'History Entries', 'E863F117-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: PR_EV_PW,
+    format: 'data',
+    perms: PR_EV_PW,
   });
   declare('HistoryRequest', 'History Request', 'E863F11C-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: PR_EV_PW,
+    format: 'data',
+    perms: PR_EV_PW,
   });
   declare('SetTime', 'Set Time', 'E863F121-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: PR_EV_PW,
+    format: 'data',
+    perms: PR_EV_PW,
   });
 
   // Window / contact sensor (Eve-extended)
   declare('LastActivation', 'Last Activation', 'E863F11A-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint32', unit: 'seconds', perms: PR_EV,
+    format: 'uint32',
+    unit: 'seconds',
+    perms: PR_EV,
   });
   declare('TimesOpened', 'Times Opened', 'E863F129-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint32', perms: PR_EV,
+    format: 'uint32',
+    perms: PR_EV,
   });
   declare('OpenDuration', 'Open Duration', 'E863F118-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint32', unit: 'seconds', perms: PR_EV_PW,
+    format: 'uint32',
+    unit: 'seconds',
+    perms: PR_EV_PW,
   });
   declare('ClosedDuration', 'Closed Duration', 'E863F119-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint32', unit: 'seconds', perms: PR_EV_PW,
+    format: 'uint32',
+    unit: 'seconds',
+    perms: PR_EV_PW,
   });
 
   // Outlet / energy (Eve-extended)
   declare('CurrentConsumption', 'Current Consumption', 'E863F10D-079E-48FF-8F27-9C2605A29F52', {
-    format: 'float', unit: 'W', perms: PR_EV,
+    format: 'float',
+    unit: 'W',
+    perms: PR_EV,
   });
   declare('TotalConsumption', 'Total Consumption', 'E863F10C-079E-48FF-8F27-9C2605A29F52', {
-    format: 'float', unit: 'kWh', perms: PR_EV,
+    format: 'float',
+    unit: 'kWh',
+    perms: PR_EV,
   });
   declare('Volts', 'Volts', 'E863F10A-079E-48FF-8F27-9C2605A29F52', {
-    format: 'float', unit: 'V', perms: PR_EV,
+    format: 'float',
+    unit: 'V',
+    perms: PR_EV,
   });
   declare('Amperes', 'Amperes', 'E863F126-079E-48FF-8F27-9C2605A29F52', {
-    format: 'float', unit: 'A', perms: PR_EV,
+    format: 'float',
+    unit: 'A',
+    perms: PR_EV,
   });
 
   // Thermostat (Eve-extended)
   declare('ValvePosition', 'Valve Position', 'E863F12E-079E-48FF-8F27-9C2605A29F52', {
-    format: 'uint8', unit: 'percentage', perms: PR_EV,
+    format: 'uint8',
+    unit: 'percentage',
+    perms: PR_EV,
   });
   declare('ProgramCommand', 'Program Command', 'E863F12C-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: ['pw'],
+    format: 'data',
+    perms: ['pw'],
   });
   declare('ProgramData', 'Program Data', 'E863F12F-079E-48FF-8F27-9C2605A29F52', {
-    format: 'data', perms: PR_EV,
+    format: 'data',
+    perms: PR_EV,
   });
 
   // NOTE: The original file overrode Service.Outlet, Service.Thermostat,

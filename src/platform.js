@@ -76,7 +76,9 @@ function FritzPlatform(log, config, api) {
   HistoryService.prototype.addEntry = function () {};
   HistoryService.prototype.cleanPersist = function () {};
   HistoryService.prototype.setExtraPersistedData = function () {};
-  HistoryService.prototype.getExtraPersistedData = function () { return null; };
+  HistoryService.prototype.getExtraPersistedData = function () {
+    return null;
+  };
 
   this.api = api;
   this.log = log;
@@ -209,9 +211,9 @@ FritzPlatform.prototype = {
         else if (device.subtype === 'smarthome-window-switch')
           new SHWindowSwitchAccessory(this.api, accessory, this.accessories, this.meshMaster);
         else if (device.subtype === 'smarthome-lightbulb')
-            new SHLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster);
+          new SHLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster);
         else if (device.subtype === 'smarthome-smoke')
-            new SHSmokeAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
+          new SHSmokeAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         else if (device.subtype === 'smarthome-switch-lightbulb' && device.energy)
           new SHOutletLightbulbAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         else if (device.subtype === 'smarthome-switch-lightbulb' && !device.energy)

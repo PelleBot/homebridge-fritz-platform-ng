@@ -2,6 +2,35 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.2.0 — 2026-05-14 (Wizard Edit-Mode / Phase G)
+
+**Setup-Wizard erhält Aktualisierungs-Routine.** Beim erneuten Aufruf des Wizards (z.B. um ein weiteres Gerät hinzuzufügen) werden die in `config.json` gespeicherten Einstellungen jetzt vorgeladen statt überschrieben. Damit ist der Hauptschmerz aus v1.1.x adressiert: manuell vergebene Tile-Namen, gewählter `accType` (z.B. `energy-light` statt `energy-temperature`) und Router-Switch-Zustände überleben einen Wizard-Re-Run unverändert.
+
+## Hintergrund
+
+Der Wizard in v1.1.x baute den `smarthome[]`-Array beim Speichern (Schritt 5) **immer aus dem In-Memory-State neu auf**. Dieser State wurde aber nur teilweise (Schritt 4 / Router-Switches) aus der bestehenden Config hydratisiert — Schritte 1–3 fielen jedes Mal auf Auto-Detection-Defaults zurück. Die sichtbare Folge: nach einem Wizard-Re-Run zeigte Apple Home wieder °C statt lx, und Tile-Namen wie „PV Einspeisung Hausanschluss" wurden auf „Aktuelle Einspeisung" zurückgesetzt.
+
+## Neuerungen
+
+- **`loadExistingConfig()`** — zentrale Lade-Funktion, die beim Wizard-Start einmal `homebridge.getPluginConfig()` aufruft und Master-Device + `smarthome[]` in `wizardState.existingConfig` ablegt. Single source of truth für alle Step-Hydrations.
+- **Schritt 1 (Verbindung):** Connection-Felder wie bisher vorausgefüllt, jetzt aber über `loadExistingConfig()` statt eines lokalen IIFE — konsistenter Pattern.
+- **Schritt 2 (Geräte):** Für jedes durch Discovery gefundene AIN wird geprüft, ob bereits ein `smarthome[]`-Eintrag existiert. Wenn ja: User-`accType` und Custom-Name übernehmen statt Auto-Detection-Default. `energy-light`-Einträge werden auf Wizard-State-Ebene zu `energy-temperature` normalisiert, damit Schritt 3 die AINs weiterhin erkennt (die °C/lx-Wahl lebt nun in `energyAccType`).
+- **Schritt 3 (Energy 250 / OBIS-Tiles):** Tile-Namen aus existierender Config gruppiert nach Sub-AIN übernehmen — fehlende Channels (`current_power`, `total_energy`) werden mit Defaults aufgefüllt. Der `energyAccType`-Radio (°C vs lx) wird global aus der Existing-Config vorausgewählt: wenn irgendein OBIS-Tile `energy-light` nutzt, ist der Light-Radio vorausgewählt.
+- **Schritt 4 (Router-Switches):** unverändert, war schon korrekt — fungierte als Pattern-Vorlage.
+- **Schritt 5 (Speichern):** Neue **Diff-Vorschau** zwischen alter und neuer Config: zeigt Tile-Umbenennungen, accType-Wechsel, neue/entfernte Geräte und geänderte Router-Switches als Liste. Wenn nichts sich ändert: „Keine Änderungen"-Hinweis. Macht klar was passieren wird, bevor man auf Speichern klickt.
+- **Bonus:** Summary-Counter in Schritt 5 zählen jetzt `energy-temperature` UND `energy-light` als „Energy-Tiles" (vorher wurde `energy-light` als „normales Gerät" gezählt).
+
+## Breaking Changes
+
+Keine. Bestehende Configs werden ohne Migration übernommen. First-Run-Verhalten (keine FritzPlatform-Sektion in `config.json`) ist unverändert: alle Defaults wie in v1.1.x.
+
+## Bekannte Limitationen
+
+- **Globaler vs. per-Tile-`energyAccType`:** Die Wizard-UI behandelt °C/lx als globale Einstellung für alle OBIS-Tiles. Wenn jemand manuell in der `config.json` gemischte Tiles erstellt hat (einige `energy-temperature`, einige `energy-light`), zeigt der Wizard nur den Wert „energy-light" an (sobald ein Tile light ist, gilt global light). Beim Speichern werden dann alle Tiles auf `energy-light` vereinheitlicht. Workaround für Mix-Setups: nicht den Wizard zum Speichern benutzen, sondern `config.json` direkt bearbeiten.
+- **Diff zeigt nur das was sich gegenüber der gespeicherten Config unterscheidet** — nicht das was sich gegenüber dem letzten Wizard-Lauf unterscheidet. Das ist by design, aber bedeutet: wenn man den Wizard mehrmals öffnet und schließt, ohne zu speichern, sieht man trotzdem nur den Diff zur letzten gespeicherten Version.
+
+---
+
 # v1.1.1 — 2026-05-14 (LightSensor variant for energy tiles)
 
 **Neuer accType `energy-light` als Alternative zu `energy-temperature`.** Beide nutzen dieselbe OBIS-Datenflow-Logik (Fritz!Smart Energy 250 sub-AINs), aber `energy-light` rendert die Werte als **LightSensor** (Einheit `lx`) statt **TemperatureSensor** (Einheit `°C`).
