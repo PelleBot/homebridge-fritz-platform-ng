@@ -58,10 +58,7 @@ class Accessory {
         'Toggling not allowed for energy-meter (read-only sensor)',
         `${this.accessory.displayName} (${this.accessory.context.config.subtype})`
       );
-      setTimeout(
-        () => service.getCharacteristic(this.api.hap.Characteristic.On).updateValue(true),
-        1000
-      );
+      setTimeout(() => service.getCharacteristic(this.api.hap.Characteristic.On).updateValue(true), 1000);
     });
 
     // OutletInUse always true so the tile renders as active in HomeKit

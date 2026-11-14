@@ -687,9 +687,7 @@ class Handler {
         let service = accessory.getService(this.api.hap.Service.LightSensor);
 
         try {
-          let device = this.smarthomeList.devices.find((device) =>
-            device.ain.includes(accessory.context.config.ain)
-          );
+          let device = this.smarthomeList.devices.find((device) => device.ain.includes(accessory.context.config.ain));
           logger.debug(device, `${accessory.displayName} (${subtype})`);
 
           if (device) {
@@ -746,9 +744,7 @@ class Handler {
         let service = accessory.getService(this.api.hap.Service.TemperatureSensor);
 
         try {
-          let device = this.smarthomeList.devices.find((device) =>
-            device.ain.includes(accessory.context.config.ain)
-          );
+          let device = this.smarthomeList.devices.find((device) => device.ain.includes(accessory.context.config.ain));
           logger.debug(device, `${accessory.displayName} (${subtype})`);
 
           if (device) {
@@ -814,9 +810,7 @@ class Handler {
         let service = accessory.getService(this.api.hap.Service.Outlet);
 
         try {
-          let device = this.smarthomeList.devices.find((device) =>
-            device.ain.includes(accessory.context.config.ain)
-          );
+          let device = this.smarthomeList.devices.find((device) => device.ain.includes(accessory.context.config.ain));
           logger.debug(device, `${accessory.displayName} (${subtype})`);
 
           if (device) {
@@ -833,13 +827,9 @@ class Handler {
                 const currentPower = Math.abs(device.powermeter.power || 0);
                 const totalEnergy = device.powermeter.energy || 0;
 
-                service
-                  .getCharacteristic(this.api.hap.Characteristic.CurrentConsumption)
-                  .updateValue(currentPower);
+                service.getCharacteristic(this.api.hap.Characteristic.CurrentConsumption).updateValue(currentPower);
 
-                service
-                  .getCharacteristic(this.api.hap.Characteristic.TotalConsumption)
-                  .updateValue(totalEnergy);
+                service.getCharacteristic(this.api.hap.Characteristic.TotalConsumption).updateValue(totalEnergy);
 
                 service.getCharacteristic(this.api.hap.Characteristic.On).updateValue(true);
                 service.getCharacteristic(this.api.hap.Characteristic.OutletInUse).updateValue(true);

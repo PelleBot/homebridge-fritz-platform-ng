@@ -1,12 +1,16 @@
 <!--
   Custom UI for @pellebot/homebridge-fritz-platform-hb2
 
-  Phases A+B+C implemented:
+  Phases A–G implemented:
     A. Foundation (server.js, public/index.html, customUi flag)
     B. Connection test — Step 1 with form + /test-connection endpoint
     C. Device discovery — Step 2 with auto-detected accType per device
-
-  Future phases: Energy 250, Router-Switches, Save, Edit mode.
+    D. Energy 250 OBIS-Reader auto-setup — Step 3 (4 tiles per reader)
+    E. Router-Switches — Step 4 (master.options pre-hydrated from config)
+    F. Save + Apply — Step 5 (writes config.json, restarts Homebridge)
+    G. Edit-Mode — re-run preserves user edits (tile names, accType, energy
+       display type, router-switches) by hydrating wizardState from the
+       existing config.json. Step 5 shows a diff of pending changes.
 -->
 <style>
   .wizard-step-indicator {
@@ -320,6 +324,9 @@
 
       <div id="saveSummary" style="margin-top: 1rem;"></div>
 
+      <!-- Phase G: diff against existing config (empty on first run) -->
+      <div id="saveDiff" style="margin-top: 1rem;"></div>
+
       <details style="margin-top: 1rem;">
         <summary style="cursor: pointer;">Generierte Plugin-Config anzeigen (JSON-Vorschau)</summary>
         <pre id="savePreview" style="background: var(--bs-tertiary-bg, #f8f9fa); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; max-height: 400px; font-size: 0.75rem; margin-top: 0.5rem;"></pre>
@@ -345,6 +352,7 @@
       energyTiles: {},            // { ain: [{ obisChannel, name }, ...] } after step 3
       energyAccType: 'energy-temperature', // 'energy-temperature' | 'energy-light' — chosen in step 3
       routerSwitches: {},         // { wifi_guest: bool, wps: bool, ... } after step 4
+      existingConfig: null,       // Phase G: { master, smarthome[] } from current config.json (null = first run)
     };
 
     // ============ DOM References ============
@@ -384,23 +392,59 @@
       });
     }
 
-    // ============ Step 1 — Connection Test ============
-    // Prefill from existing plugin config
-    (async () => {
+    // ============ Phase G — Edit-Mode (Existing-Config Hydration) ============
+    // Load the existing FritzPlatform config exactly once at wizard start so a
+    // re-run of the wizard doesn't blindly overwrite user customizations:
+    //   - Step 1: prefills connection fields (host/user/pw/ssl/tr064)
+    //   - Step 2: preserves user-chosen accType + custom names per AIN
+    //   - Step 3: preserves OBIS tile names + the °C-vs-lx display choice
+    //   - Step 4: hydrateRouterSwitches() already reads this directly
+    //   - Step 5: drives the diff preview against the new config
+    //
+    // Falls back to defaults / auto-detection on first install (no FritzPlatform
+    // entry in config.json yet).
+    async function loadExistingConfig() {
       try {
         const allConfig = await homebridge.getPluginConfig();
         const fritz = (allConfig || []).find((c) => c && c.platform === 'FritzPlatform');
-        const master = fritz && fritz.devices && fritz.devices.find((d) => d.master === true);
-        if (master) {
-          if (master.host) inputs.host.value = master.host;
-          if (master.port) inputs.port.value = master.port;
-          if (typeof master.ssl === 'boolean') inputs.ssl.checked = master.ssl;
-          if (typeof master.tr064 === 'boolean') inputs.tr064.checked = master.tr064;
-          if (master.username) inputs.username.value = master.username;
-          if (master.password) inputs.password.value = master.password;
-        }
+        if (!fritz) return null;
+        const master = (fritz.devices || []).find((d) => d && d.master === true) || null;
+        const smarthome = Array.isArray(fritz.smarthome) ? fritz.smarthome : [];
+        return { master, smarthome };
       } catch (err) {
-        // No config yet — keep placeholders.
+        return null;
+      }
+    }
+
+    // ============ Step 1 — Connection Test ============
+    // Prefill from existing plugin config. Also seeds wizardState.existingConfig
+    // and wizardState.energyAccType so later steps can hydrate from it.
+    (async () => {
+      wizardState.existingConfig = await loadExistingConfig();
+      const cfg = wizardState.existingConfig;
+      if (!cfg) return;
+
+      // Step 1 — connection fields
+      const master = cfg.master;
+      if (master) {
+        if (master.host) inputs.host.value = master.host;
+        if (master.port) inputs.port.value = master.port;
+        if (typeof master.ssl === 'boolean') inputs.ssl.checked = master.ssl;
+        if (typeof master.tr064 === 'boolean') inputs.tr064.checked = master.tr064;
+        if (master.username) inputs.username.value = master.username;
+        if (master.password) inputs.password.value = master.password;
+      }
+
+      // Seed energyAccType from existing OBIS entries so the Step 3 radio
+      // preselects the right display type (temperature vs light). If ANY
+      // existing tile uses energy-light, treat the whole reader as light —
+      // the wizard applies one global type to all OBIS tiles on save.
+      const obisEntries = cfg.smarthome.filter(
+        (e) => e && (e.accType === 'energy-temperature' || e.accType === 'energy-light')
+      );
+      if (obisEntries.length > 0) {
+        const anyLight = obisEntries.some((e) => e.accType === 'energy-light');
+        wizardState.energyAccType = anyLight ? 'energy-light' : 'energy-temperature';
       }
     })();
 
@@ -509,15 +553,41 @@
         { value: 'skip', label: '— ignorieren —' },
       ];
 
+      // Phase G: index existing smarthome entries by AIN for quick lookup.
+      // Multiple OBIS entries may share an AIN (one per obisChannel); we just
+      // need the first one to recover the accType + custom name.
+      const existingSh = (wizardState.existingConfig && wizardState.existingConfig.smarthome) || [];
+      const existingByAin = {};
+      for (const e of existingSh) {
+        if (e && e.ain && !existingByAin[e.ain]) existingByAin[e.ain] = e;
+      }
+
       const html = wizardState.discoveredDevices.map((d) => {
         // Default-Selection: include if accType detected (not 'unknown' / 'skip')
         const defaultInclude = d.accType !== 'unknown' && d.accType !== 'skip';
         if (!wizardState.deviceSelections[d.ain]) {
-          wizardState.deviceSelections[d.ain] = {
-            include: defaultInclude,
-            accType: d.accType,
-            name: d.name,
-          };
+          const existingEntry = existingByAin[d.ain];
+          if (existingEntry) {
+            // Phase G: AIN is already configured — preserve the user's chosen
+            // accType and name instead of overwriting with auto-detection.
+            // energy-light is normalized to energy-temperature at this layer
+            // so Step 3 picks the AIN up (energyAccType holds the display
+            // choice and is applied at save time).
+            const normalizedAccType = (existingEntry.accType === 'energy-light')
+              ? 'energy-temperature'
+              : existingEntry.accType;
+            wizardState.deviceSelections[d.ain] = {
+              include: true,
+              accType: normalizedAccType,
+              name: existingEntry.name || d.name,
+            };
+          } else {
+            wizardState.deviceSelections[d.ain] = {
+              include: defaultInclude,
+              accType: d.accType,
+              name: d.name,
+            };
+          }
         }
         const sel = wizardState.deviceSelections[d.ain];
 
@@ -727,13 +797,104 @@
       };
     }
 
+    /**
+     * Phase G: compute a human-readable list of changes the upcoming save will
+     * make against the currently persisted config.json. Empty/null on a first
+     * install (nothing to compare to).
+     *
+     * Key by (ain + obisChannel) for OBIS tiles (multiple per AIN), by ain
+     * only for everything else.
+     */
+    function renderConfigDiff(newConfig, existing) {
+      if (!existing) return ''; // first run — nothing to diff
+
+      const lines = [];
+
+      // -- Master device fields --
+      const oldMaster = existing.master || {};
+      const newMaster = (newConfig.devices && newConfig.devices[0]) || {};
+      if ((oldMaster.host || '') !== (newMaster.host || '')) {
+        lines.push(`Host: <code>${escapeHtml(oldMaster.host || '—')}</code> → <code>${escapeHtml(newMaster.host || '—')}</code>`);
+      }
+      if ((oldMaster.username || '') !== (newMaster.username || '')) {
+        lines.push(`Username: <code>${escapeHtml(oldMaster.username || '—')}</code> → <code>${escapeHtml(newMaster.username || '—')}</code>`);
+      }
+      if (!!oldMaster.ssl !== !!newMaster.ssl) {
+        lines.push(`SSL: ${oldMaster.ssl ? 'an' : 'aus'} → ${newMaster.ssl ? 'an' : 'aus'}`);
+      }
+      if ((oldMaster.port || 49000) !== (newMaster.port || 49000)) {
+        lines.push(`Port: <code>${oldMaster.port || 49000}</code> → <code>${newMaster.port || 49000}</code>`);
+      }
+
+      // -- Router-Switches (master.options) --
+      const oldOpts = (oldMaster.options) || {};
+      const newOpts = (newMaster.options) || {};
+      const allOptKeys = new Set([...Object.keys(oldOpts), ...Object.keys(newOpts)]);
+      for (const k of allOptKeys) {
+        const wasOn = !!oldOpts[k];
+        const isOn = !!newOpts[k];
+        if (wasOn && !isOn) lines.push(`Router-Switch <code>${escapeHtml(k)}</code> entfernt`);
+        else if (!wasOn && isOn) lines.push(`Router-Switch <code>${escapeHtml(k)}</code> hinzugefügt`);
+      }
+
+      // -- Smarthome entries (devices + OBIS tiles) --
+      const oldSh = existing.smarthome || [];
+      const newSh = newConfig.smarthome || [];
+      const keyOf = (e) => e.obisChannel ? `${e.ain}::${e.obisChannel}` : e.ain;
+      const oldByKey = {};
+      const newByKey = {};
+      for (const e of oldSh) if (e && e.ain) oldByKey[keyOf(e)] = e;
+      for (const e of newSh) if (e && e.ain) newByKey[keyOf(e)] = e;
+
+      for (const k of Object.keys(newByKey)) {
+        const n = newByKey[k];
+        const o = oldByKey[k];
+        if (!o) {
+          const chan = n.obisChannel ? ` <small>(${escapeHtml(n.obisChannel)})</small>` : '';
+          lines.push(`Neu: <code>${escapeHtml(n.ain)}</code>${chan} — <em>${escapeHtml(n.accType)}</em> "${escapeHtml(n.name || '')}"`);
+        } else {
+          if ((o.accType || '') !== (n.accType || '')) {
+            lines.push(`<code>${escapeHtml(n.ain)}</code>${n.obisChannel ? ` <small>(${escapeHtml(n.obisChannel)})</small>` : ''}: accType <em>${escapeHtml(o.accType || '—')}</em> → <em>${escapeHtml(n.accType || '—')}</em>`);
+          }
+          if ((o.name || '') !== (n.name || '')) {
+            lines.push(`<code>${escapeHtml(n.ain)}</code>${n.obisChannel ? ` <small>(${escapeHtml(n.obisChannel)})</small>` : ''}: Name "${escapeHtml(o.name || '—')}" → "${escapeHtml(n.name || '—')}"`);
+          }
+        }
+      }
+      for (const k of Object.keys(oldByKey)) {
+        if (newByKey[k]) continue;
+        const o = oldByKey[k];
+        const chan = o.obisChannel ? ` <small>(${escapeHtml(o.obisChannel)})</small>` : '';
+        lines.push(`Entfernt: <code>${escapeHtml(o.ain)}</code>${chan} — war <em>${escapeHtml(o.accType)}</em> "${escapeHtml(o.name || '')}"`);
+      }
+
+      if (lines.length === 0) {
+        return `
+          <div class="alert alert-secondary">
+            <strong>Keine Änderungen</strong> gegenüber der aktuellen <code>config.json</code>.
+            Du kannst trotzdem speichern (no-op) oder den Wizard verlassen.
+          </div>
+        `;
+      }
+
+      return `
+        <div class="alert alert-warning">
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">📝 Änderungen gegenüber der aktuellen Konfiguration (${lines.length}):</div>
+          <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.9rem;">
+            ${lines.map((l) => `<li>${l}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
     function renderSavePreview() {
       const config = buildPluginConfig();
       const summary = document.getElementById('saveSummary');
       const preview = document.getElementById('savePreview');
+      const diffEl = document.getElementById('saveDiff');
 
-      const nDevices = config.smarthome.filter((s) => s.accType !== 'energy-temperature').length;
-      const nEnergy = config.smarthome.filter((s) => s.accType === 'energy-temperature').length;
+      const nDevices = config.smarthome.filter((s) => s.accType !== 'energy-temperature' && s.accType !== 'energy-light').length;
+      const nEnergy = config.smarthome.filter((s) => s.accType === 'energy-temperature' || s.accType === 'energy-light').length;
       const nRouter = Object.keys((config.devices[0] && config.devices[0].options) || {}).length;
 
       // Mask password in preview for safety
@@ -755,6 +916,10 @@
       `;
 
       preview.textContent = JSON.stringify(maskedConfig, null, 2);
+
+      // Phase G: render diff against the config that was on disk when the
+      // wizard opened, so the user sees exactly what will change.
+      diffEl.innerHTML = renderConfigDiff(config, wizardState.existingConfig);
     }
 
     const saveBtn = document.getElementById('saveBtn');
@@ -911,13 +1076,50 @@
         '-2': { current_power: 'Aktuelle Einspeisung', total_energy: 'Gesamt Einspeisung' },
       };
 
+      // Phase G: index existing OBIS tiles by AIN so we can preserve the
+      // user's custom tile names instead of resetting to "Aktuelle Einspeisung"
+      // etc. on every wizard re-run. Existing config may store one OR two
+      // entries per sub-AIN (current_power, total_energy) — we keep whatever
+      // is there and only fill in the missing channel with the default name.
+      const existingObisByAin = {};
+      const existingShAll = (wizardState.existingConfig && wizardState.existingConfig.smarthome) || [];
+      for (const e of existingShAll) {
+        if (!e || !e.ain) continue;
+        if (e.accType !== 'energy-temperature' && e.accType !== 'energy-light') continue;
+        if (!existingObisByAin[e.ain]) existingObisByAin[e.ain] = [];
+        existingObisByAin[e.ain].push({
+          obisChannel: e.obisChannel || 'current_power',
+          name: e.name,
+        });
+      }
+
       // Initialize state for each OBIS AIN if not already there
       for (const baseAin of Object.keys(byBase)) {
         const group = byBase[baseAin];
         for (const dir of ['-1', '-2']) {
           const entry = dir === '-1' ? group.ain1 : group.ain2;
           if (!entry) continue;
-          if (!wizardState.energyTiles[entry.ain]) {
+          if (wizardState.energyTiles[entry.ain]) continue;
+
+          const existingTiles = existingObisByAin[entry.ain];
+          if (existingTiles && existingTiles.length > 0) {
+            // Phase G: rebuild from existing config, preserving names.
+            // Ensure both channels exist (wizard UI always renders 2 tiles
+            // per sub-AIN — current_power first, total_energy second).
+            const byChan = {};
+            for (const t of existingTiles) byChan[t.obisChannel] = t;
+            const tiles = [
+              {
+                obisChannel: 'current_power',
+                name: (byChan.current_power && byChan.current_power.name) || defaultNames[dir].current_power,
+              },
+              {
+                obisChannel: 'total_energy',
+                name: (byChan.total_energy && byChan.total_energy.name) || defaultNames[dir].total_energy,
+              },
+            ];
+            wizardState.energyTiles[entry.ain] = tiles;
+          } else {
             wizardState.energyTiles[entry.ain] = [
               { obisChannel: 'current_power', name: defaultNames[dir].current_power },
               { obisChannel: 'total_energy', name: defaultNames[dir].total_energy },
