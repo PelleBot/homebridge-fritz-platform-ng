@@ -27,6 +27,7 @@ Production: läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-La
 | FRITZ!DECT 200 / 210 (schaltbare Steckdose) | `switch` | An/Aus + optional Energiemessung |
 | FRITZ!Smart Energy 250 (OBIS-Reader, an ISKRA o.ä.) | `energy-temperature` oder `energy-light` | Aktuelle Leistung in W, kumulierte Energie in kWh — entweder als TemperatureSensor (°C-Tile, prominent im Raum) oder LightSensor (lx-Tile, passive Sensor-Anzeige, per Favorit ins Home-Tab holbar) |
 | FRITZ!Box Router (Master) | (via `options`) | Gast-WLAN-Switch, WPS-Switch, optional weitere Toggles |
+| Handy/Tablet im WLAN (optional, seit v1.3.0) | `presence[]` mit `occupancy` oder `motion` | Anwesenheit: Belegungs- oder Bewegungssensor je Gerät, optional „Anyone“ und „Guest“ |
 
 ## Architektur
 
@@ -42,12 +43,13 @@ Das **Router-Accessory** (Master FritzBox) wird per default mit `hide: true` aus
 Aus dem ursprünglichen Code-Baum entfernt oder nicht migriert — wer eine dieser Funktionen braucht, ist hier nicht richtig:
 
 - **Callmonitor** (Anrufüberwachung)
-- **Presence** (WLAN-Anwesenheit)
 - **Network-Watcher**
 - **Wake-on-LAN**
 - **Child Lock** (Internet-Sperren)
 - **Extras-Subsysteme** (DNS-Switch, Fallback-Internet, Phonebook, Telegram-Notifications) — die WiFi/WPS-Switches der Extras-Datei sind ausgenommen und voll funktional
 - **`fakegato-history`** (Eve-App History-Graphen — als No-Op gestubbt weil HAP-v2-inkompatibel)
+
+**Presence** (WLAN-Anwesenheit) war bis v1.2.0 ausgeschlossen und ist seit **v1.3.0 als optionale Funktion** zurück — standardmäßig aus, siehe [Anwesenheit per WLAN](#anwesenheit-per-wlan-optional-seit-v130). Telegram-Meldungen und die Ping-Prüfung des Original-Plugins gehören nicht dazu.
 
 ## Voraussetzungen
 
@@ -191,6 +193,44 @@ Beide werden seit v1.1.1 unterstützt. Standard ist `energy-temperature`. Empfeh
 
 **Richtungs-Trennung:** AVM spiegelt den NET-Power-Wert auf beiden Sub-AINs (gleiche Zahl mit Vorzeichen). Das Plugin trennt das anhand des AIN-Suffixes — `-1` zeigt den Wert nur wenn `power > 0` (Bezug), `-2` zeigt `|power|` nur wenn `power < 0` (Einspeisung). Im Ruhe-/Inverse-Zustand zeigt die jeweils andere Kachel `0`.
 
+### Anwesenheit per WLAN (optional, seit v1.3.0)
+
+Zeigt in HomeKit, ob ein Gerät (typisch: iPhone) im Netz der FRITZ!Box ist — als **Belegungssensor** (`occupancy`, Standard) oder **Bewegungssensor** (`motion`). Damit lassen sich Automationen wie „Letzte Person geht → Heizung runter“ bauen, ohne Standortfreigabe in der Home-App.
+
+Die Funktion ist **Opt-in**: Ohne `presence`-Einträge mit `active: true` passiert nichts. Einrichtung entweder im Setup-Wizard (Schritt 4, Abschnitt „Anwesenheit per WLAN“) oder in der `config.json`:
+
+```json
+{
+  "presence": [
+    {
+      "active": true,
+      "name": "iPhone Anna",
+      "address": "AA:BB:CC:DD:EE:FF",
+      "accType": "occupancy",
+      "offDelay": 300
+    }
+  ],
+  "options": {
+    "presence": { "anyone": true, "guest": false, "accType": "occupancy" }
+  }
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `address` | IPv4- oder MAC-Adresse wie in der FRITZ!Box unter *Heimnetz → Netzwerk* angezeigt (Groß-/Kleinschreibung egal) |
+| `accType` | `occupancy` (Belegung) oder `motion` (Bewegung) |
+| `onDelay` | Sekunden, die das Gerät verbunden sein muss, bevor der Sensor „erkannt“ meldet (Standard 0) |
+| `offDelay` | Sekunden, die das Gerät weg sein muss, bevor der Sensor „nicht erkannt“ meldet (**Standard 300**) |
+| `options.presence.anyone` | zusätzlicher Sensor „Anyone“: erkannt, solange mindestens ein Gerät erkannt ist |
+| `options.presence.guest` | zusätzlicher Sensor „Guest“: erkannt, solange ein Gerät im Gast-WLAN ist |
+
+**Wichtig für iPhone/iPad — private WLAN-Adresse:** iOS nutzt je WLAN eine eigene „private WLAN-Adresse“, die sich je nach Einstellung (*Rotierend*) regelmäßig ändert. Damit die Zuordnung hält: auf dem iPhone *Einstellungen → WLAN → (i) neben dem Heim-WLAN → Private WLAN-Adresse* auf **Fest** stellen (oder ausschalten), danach die in der FRITZ!Box angezeigte Adresse eintragen. Alternativ in der FRITZ!Box dem Gerät „immer die gleiche IPv4-Adresse zuweisen“ und die IP verwenden.
+
+**Warum die Abmeldeverzögerung:** Schlafende iPhones trennen sich zum Stromsparen immer wieder kurz vom WLAN. Ohne Verzögerung springt der Sensor ständig zwischen „zu Hause“ und „weg“. `offDelay` unter 60 s erzeugt deshalb eine Warnung im Log; 300 s (5 min) ist ein guter Startwert, bei Fehlalarmen auf 600–900 s erhöhen. Die Erkennung ist so schnell wie das Polling (`options.polling.timer`, Standard 15 s) plus Verzögerung.
+
+**Grenzen:** Die FRITZ!Box meldet nur, ob das Gerät verbunden ist — nicht, ob es wirklich jemand bei sich trägt. Jeder Abfragezyklus fragt die Host-Liste der FRITZ!Box ab (zusätzliche Last bei vielen Geräten oder kurzem Polling-Intervall). Meldet das Log beim Abruf der Host-Liste einen Berechtigungsfehler, dem FRITZ!Box-Benutzer zusätzlich *FRITZ!Box-Einstellungen* geben (wie bei den Router-Switches). Beim Bewegungssensor zeigt die Eve-App keine Verlaufsgrafik (fakegato ist gestubbt).
+
 ## Migration vom Original-Plugin
 
 Wenn du bisher das unmaintained Original `homebridge-fritz-platform@6.0.19` eingesetzt hast:
@@ -199,7 +239,7 @@ Wenn du bisher das unmaintained Original `homebridge-fritz-platform@6.0.19` eing
 2. **Update Homebridge auf 2.x**: `sudo npm install -g homebridge@latest`
 3. **Original-Plugin entfernen**: `sudo npm uninstall -g homebridge-fritz-platform`
 4. **Dieses Plugin installieren**: `sudo npm install -g @pellebot/homebridge-fritz-platform-hb2`
-5. **Config anpassen**: nicht-mehr-unterstützte Subsysteme aus der Config entfernen (`presence`, `callmonitor`, `wol`, `childLock`, `network`, `extras`, `telegram` — werden eh ignoriert, aber sauberer wenn weg).
+5. **Config anpassen**: nicht-mehr-unterstützte Subsysteme aus der Config entfernen (`callmonitor`, `wol`, `childLock`, `network`, `extras`, `telegram` — werden eh ignoriert, aber sauberer wenn weg). Bestehende `presence`-Einträge werden seit v1.3.0 wieder ausgewertet; `offDelay` prüfen (Standard jetzt 300 s), `ping`/`threshold`/`blockTelegram` werden nicht unterstützt.
 6. **Homebridge neu starten**
 
 Accessory-UUIDs basieren auf AIN + Name. Wer Device-Namen unverändert lässt, behält das HomeKit-Pairing bei und muss nichts in der Home-App neu zuordnen.

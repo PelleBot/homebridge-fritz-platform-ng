@@ -1,6 +1,6 @@
 # AGENTS.md — Operating-Manual für LLM-Sessions
 
-> Diese Datei ist der **Primärkontext** für jede LLM-Session am Code dieses Projekts. Lies sie vollständig bevor du Code schreibst, Docs änderst, Issues beantwortest oder PRs reviewst. Sie ist als laufendes Wartungs-Briefing geschrieben; der Migrations-Hintergrund (April/Mai 2026) ist in `CHANGELOG.md` zusammengefasst.
+> Stand: 2026-11-14, v1.3.0 (Presence als Opt-in). Diese Datei ist der **Primärkontext** für jede LLM-Session am Code dieses Projekts. Lies sie vollständig bevor du Code schreibst, Docs änderst, Issues beantwortest oder PRs reviewst. Sie ist als laufendes Wartungs-Briefing geschrieben; der Migrations-Hintergrund (April/Mai 2026) ist in `CHANGELOG.md` zusammengefasst.
 
 ---
 
@@ -26,14 +26,16 @@ Du bist Claude, ein LLM-Agent. Du wirst von **PelleBot** (Repo-Maintainer, IT-Ma
 ## Projekt-Scope (was wir wartens, was wir bewusst nicht warten)
 
 **In Scope:**
-- AVM DECT-Geräte: Thermostate (FRITZ!DECT 301, Comet DECT), Lampen (FRITZ!Smart Light 500), Tempsensoren (FRITZ!Smart Control 440), Outlets mit Energiemessung (FRITZ!DECT 200/210), Energy-Meter im OBIS-Reader-Modus (FRITZ!Smart Energy 250)
+- AVM DECT-Geräte: Thermostate (FRITZ!DECT 301, Comet DECT), Lampen (FRITZ!Smart Light 500), Tempsensoren (FRITZ!Smart Control 440), Outlets mit Energiemessung (FRITZ!DECT 200/210), Energy-Meter im OBIS-Reader-Modus (FRITZ!Smart Energy 250, accTypes `energy-temperature` und `energy-light`)
+- FRITZ!Box Router-Switches (Gast-WLAN, WPS u. a.) über `options` des Master-Devices
+- Setup-Wizard in Config UI X (`homebridge-ui/`, seit v1.1.0, Edit-Mode seit v1.2.0)
+- **Presence (WLAN-Anwesenheit) als Opt-in** seit v1.3.0 (Entscheidung PelleBot 2026-11-14): Occupancy-/Motion-Sensor je Gerät (IP oder MAC), optional „Anyone“ und „Guest“, Pflicht-Abmeldeverzögerung `offDelay` (Standard 300 s). Standardmäßig aus. Nicht enthalten: Telegram-Meldungen, Ping-Prüfung.
 - Homebridge 1.8.5+ und Homebridge 2.0+
 - Node.js 22.x und 24.x
 - FritzBox-Modelle 7xxx/6xxx mit FRITZ!OS 7.x+
 
 **Out of Scope (Issues + PRs dazu ablehnen mit klarem Verweis):**
 - Callmonitor (Fritz!Fon-Anrufüberwachung)
-- Presence (WiFi-Anwesenheits-Erkennung)
 - Network-Watcher
 - Wake-on-LAN
 - Child Lock (Internet-Sperren)
@@ -52,7 +54,7 @@ Wenn ein User ein Out-of-Scope-Feature anfragt: höflich + bestimmt verweisen au
 ```
 index.mjs                   ESM-Entrypoint (HB 2.0 Anforderung)
 └─ src/                     Interner CJS-Tree (Minimal-Patch-Prinzip)
-   ├─ platform.js           Hauptlogik: Plugin-Init, Accessory-Setup, Polling-Dispatch
+   ├─ platform.js           Hauptlogik: Plugin-Init, Accessory-Setup, Polling-Dispatch, fakegato-NoOp-Stub
    ├─ package.json          { type: "commonjs" } — scoped CJS für src/
    ├─ lib/
    │  ├─ telegram.js        DEAD CODE (Telegram out of scope, aber required durch alte Importe)
@@ -75,15 +77,25 @@ index.mjs                   ESM-Entrypoint (HB 2.0 Anforderung)
       │  ├─ temperature/   accType "temperature"
       │  ├─ outlet/        accType "switch" mit energy:true
       │  ├─ switch/        accType "switch" ohne energy
-      │  ├─ energy-meter/  accType "energy-meter" (NEU, OBIS-Reader)
+      │  ├─ energy-meter/  accType "energy-meter" (OBIS-Reader, Outlet-basiert, Eve)
+      │  ├─ energy-temperature/  accType "energy-temperature" (OBIS als TemperatureSensor, v1.0.0)
+      │  ├─ energy-light/  accType "energy-light" (OBIS als LightSensor, v1.1.1)
       │  ├─ window/        Sub-Accessory von Thermostat (Window-Open-Detection)
       │  ├─ contact/, humidity/, button/, blind/, smoke/, switch-lightbulb/, window-switch/, outlet-lightbulb/
-      └─ callmonitor/, presence/, network/, wol/, childlock/, extras/   DEAD DIRECTORIES
-                                                                        Nicht in platform.js wired,
-                                                                        nur damit Cross-Imports
-                                                                        aus router/router.accessory.js
-                                                                        nicht crashen.
+      ├─ presence/          Opt-in seit v1.3.0 (wired, type "presence"): occupancy/, motion/,
+      │                     presence.handler.js (Host-Liste via getAllHostsV2, on/offDelay),
+      │                     presence_guest.handler.js (Gast-WLAN-Associations)
+      └─ callmonitor/, network/, wol/, childlock/, extras/   DEAD DIRECTORIES (extras/ teilweise aktiv,
+                                                            s.u.). Nicht in platform.js wired, nur damit
+                                                            Cross-Imports aus router/router.accessory.js
+                                                            nicht crashen. In .npmignore ausgeschlossen
+                                                            (außer extras/).
+homebridge-ui/              Custom-UI Setup-Wizard (server.js = Discovery/Verbindungstest,
+                            public/index.html = 5 Schritte; Presence-Abschnitt in Schritt 4)
+ci/presence-mock-test.cjs   Mock-Test Presence (läuft in CI, nicht im npm-Paket)
 ```
+
+**`.npmignore` beachten:** Wird ein bisher totes Verzeichnis wieder eingebunden, muss es aus `.npmignore` raus — sonst fehlt es im npm-Paket und das Plugin crasht beim Laden (passiert fast bei `presence/` in v1.3.0). Vor jedem Release `npm pack --dry-run` prüfen.
 
 **Cross-Reference**: `router/router.accessory.js` hat einen Top-Level-Require auf `../extras/extras.handler`. Deshalb darf `extras/` NICHT gelöscht werden, auch wenn es im Plugin nicht mehr aktiv ist. Gleiches für andere Out-of-Scope-Dirs die transitiv geladen werden.
 
@@ -143,9 +155,9 @@ Validation:
 
 ---
 
-## Bekannte Fallstricke (Stand 2026-05-13, v1.0.0)
+## Bekannte Fallstricke (Stand 2026-11-14, v1.3.0)
 
-1. **fakegato-history Stub.** Keine Eve-App-History-Graphen. Wenn jemand fragt: README/CHANGELOG verweisen, weiterer Fix erst wenn ein HAP-v2-kompatibler Fork von fakegato existiert ODER wir vendoren einen eigenen.
+1. **fakegato-history Stub.** Keine Eve-App-History-Graphen. Der Stub muss jede Methode haben, die aktive Pfade aufrufen (`addEntry`, `getInitialTime`, …) — fehlende Methoden crashen die Child-Bridge (Issue #2, Fix v1.2.1). Presence-Handler prüfen `getInitialTime` zusätzlich defensiv. Wenn jemand fragt: README/CHANGELOG verweisen, weiterer Fix erst wenn ein HAP-v2-kompatibler Fork von fakegato existiert ODER wir vendoren einen eigenen.
 
 2. **Apple Home zeigt keine Eve-Charakteristiken.** Für Energy-Meter (Outlet-basiert) braucht's die Eve App. **Workaround in v1.0.0:** Der `energy-temperature`-accType nutzt einen TemperatureSensor-Service, damit Apple Home den Zahlenwert nativ als Zahlen-Tile (Einheit °C) anzeigt — bewusst akzeptierter Trade-off für Sichtbarkeit ohne Eve.
 
@@ -157,7 +169,9 @@ Validation:
 
 6. **`registerPlatform`-Kennung vs npm-Paket-Name.** Plugin registriert sich in `index.mjs` als `'homebridge-fritz-platform'` (erster Arg), obwohl das npm-Paket `@pellebot/homebridge-fritz-platform-hb2` heißt. **Intentional**: cached Accessories aus dem Upstream-Plugin und aus den `6.1.0-hb2patch.x` Pre-Releases (mit `plugin: 'homebridge-fritz-platform'`-Feld) bleiben matched, kein iPhone-Re-Pairing nötig. Nicht ändern ohne Migration-Plan für bestehende User.
 
-7. **Config UI X zeigt nur was im `config.schema.json` ist.** Wenn ein neues Feld im Plugin-Code dazukommt, MUSS es auch ins Schema, sonst wird's nicht editierbar in der UI (User müsste die JSON manuell bearbeiten).
+7. **Presence und iPhones.** Private WLAN-Adresse (iOS) muss für das Heim-WLAN auf „Fest“ stehen, sonst passt die konfigurierte MAC nicht mehr. Schlafende iPhones verlassen kurz das WLAN → `offDelay` nie auf 0 empfehlen (Warnung im Log unter 60 s).
+
+8. **Config UI X zeigt nur was im `config.schema.json` ist.** Wenn ein neues Feld im Plugin-Code dazukommt, MUSS es auch ins Schema, sonst wird's nicht editierbar in der UI (User müsste die JSON manuell bearbeiten).
 
 ---
 

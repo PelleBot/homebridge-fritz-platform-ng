@@ -56,6 +56,7 @@ yarn.lock
 # dotenv environment variables file
 .env
 test/
+ci/
 .github
 .vscode
 demo
@@ -85,10 +86,11 @@ branding/*.jpeg
 # cleanup did not eliminate. Excluded from the published tarball to reduce
 # package size and avoid confusion ("why does the npm tarball contain a
 # callmonitor.js that does nothing?").
+# src/accessories/presence/ is wired in again since v1.3.0 (opt-in) and
+# MUST be shipped.
 src/accessories/callmonitor/
 src/accessories/childlock/
 src/accessories/network/
-src/accessories/presence/
 src/accessories/wol/
 src/lib/callmonitor.js
 # NOTE: src/lib/telegram.js is required at module-load time by platform.js,

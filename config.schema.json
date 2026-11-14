@@ -708,6 +708,69 @@
         }
       }
     },
+    "presence": {
+      "title": "Presence (WLAN, optional)",
+      "type": "array",
+      "description": "Opt-in since v1.3.0. Exposes an occupancy or motion sensor that shows whether a device (e.g. an iPhone) is connected to the FRITZ!Box network. Off unless an entry is set to active.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean",
+            "default": false,
+            "description": "If enabled, the presence sensor will be exposed to HomeKit."
+          },
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "placeholder": "iPhone Andreas",
+            "description": "Name of the sensor in HomeKit. Must be unique and must not be \"Anyone\" or \"Guest\".",
+            "required": true
+          },
+          "address": {
+            "title": "IP or MAC address",
+            "type": "string",
+            "placeholder": "AA:BB:CC:DD:EE:FF",
+            "description": "IPv4 or MAC address of the device as shown in the FRITZ!Box (Heimnetz > Netzwerk). iPhones use a private Wi-Fi address: set it to \"Fixed\" for the FRITZ!Box network and use that address here.",
+            "required": true
+          },
+          "accType": {
+            "title": "Accessory Type",
+            "type": "string",
+            "default": "occupancy",
+            "oneOf": [
+              {
+                "title": "Occupancy Sensor",
+                "enum": [
+                  "occupancy"
+                ]
+              },
+              {
+                "title": "Motion Sensor",
+                "enum": [
+                  "motion"
+                ]
+              }
+            ]
+          },
+          "onDelay": {
+            "title": "Arrival delay (seconds)",
+            "type": "integer",
+            "minimum": 0,
+            "placeholder": 0,
+            "description": "Seconds the device must be connected before the sensor switches to detected. Default 0."
+          },
+          "offDelay": {
+            "title": "Leave delay (seconds)",
+            "type": "integer",
+            "minimum": 0,
+            "placeholder": 300,
+            "description": "Seconds the device must be disconnected before the sensor switches to not detected. Default 300. Sleeping iPhones leave the Wi-Fi for short periods; values below 60 make the sensor flap."
+          }
+        }
+      }
+    },
     "options": {
       "titel": "Options",
       "type": "object",
@@ -738,6 +801,43 @@
                 "type": "string",
                 "description": "Name/Type/Catagory of the device to exclude from polling."
               }
+            }
+          }
+        },
+        "presence": {
+          "title": "Presence",
+          "type": "object",
+          "properties": {
+            "anyone": {
+              "title": "\"Anyone\" sensor",
+              "type": "boolean",
+              "default": false,
+              "description": "Additional sensor that is detected as long as at least one active presence device is detected."
+            },
+            "guest": {
+              "title": "\"Guest\" sensor",
+              "type": "boolean",
+              "default": false,
+              "description": "Additional sensor that is detected while at least one device is connected to the guest WLAN."
+            },
+            "accType": {
+              "title": "Accessory Type for Anyone/Guest",
+              "type": "string",
+              "default": "occupancy",
+              "oneOf": [
+                {
+                  "title": "Occupancy Sensor",
+                  "enum": [
+                    "occupancy"
+                  ]
+                },
+                {
+                  "title": "Motion Sensor",
+                  "enum": [
+                    "motion"
+                  ]
+                }
+              ]
             }
           }
         }
@@ -900,6 +1000,33 @@
             }
           ]
         }
+      ]
+    },
+    {
+      "title": "Presence (WLAN, optional)",
+      "description": "Opt-in: shows in HomeKit whether a phone is in the home network. Leave empty to keep the feature off.",
+      "expandable": true,
+      "expanded": false,
+      "orderable": false,
+      "type": "section",
+      "items": [
+        {
+          "key": "presence",
+          "type": "array",
+          "orderable": false,
+          "buttonText": "Add Presence Device",
+          "items": [
+            "presence[].active",
+            "presence[].name",
+            "presence[].address",
+            "presence[].accType",
+            "presence[].onDelay",
+            "presence[].offDelay"
+          ]
+        },
+        "options.presence.anyone",
+        "options.presence.guest",
+        "options.presence.accType"
       ]
     },
     {

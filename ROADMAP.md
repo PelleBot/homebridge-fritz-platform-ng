@@ -177,7 +177,7 @@ Die Roadmap ist in Phasen organisiert. **Phase 0 (Public Release) ist abgeschlos
 - **Web-Dashboard**: kleines separates UI für Live-Werte, ergänzend zu Eve App
 - **Home-Assistant-Integration**: Wenn jemand aus der Community parallel HA nutzt, eine Brücke skizzieren
 - **i18n der Logs**: Deutsche + englische Log-Texte
-- **Out-of-Scope-Subsysteme wieder anbieten**: Callmonitor / Presence — nur falls signifikante Community-Nachfrage entsteht, sonst NICHT (Komplexitäts-Falle)
+- **Out-of-Scope-Subsysteme wieder anbieten**: Callmonitor — nur falls signifikante Community-Nachfrage entsteht, sonst NICHT (Komplexitäts-Falle). Presence ist seit v1.3.0 als Opt-in zurück (Entscheidung Maintainer 2026-11-14).
 
 ---
 
