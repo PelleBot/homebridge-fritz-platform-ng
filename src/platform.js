@@ -72,8 +72,16 @@ function FritzPlatform(log, config, api) {
   // Functional impact: Eve App will not show historical graphs for
   // thermostats, temperature, humidity, contact/window, outlet energy.
   // HomeKit core functionality (control, current state) is unaffected.
-  HistoryService = function NoOpHistoryService() {};
+  // getInitialTime() is used by the contact/window handlers (Eve
+  // LastActivation/ClosedDuration). The stub returns the construction time
+  // in Unix seconds, so durations count from bridge start (issue #2).
+  HistoryService = function NoOpHistoryService() {
+    this.initialTime = Math.floor(Date.now() / 1000);
+  };
   HistoryService.prototype.addEntry = function () {};
+  HistoryService.prototype.getInitialTime = function () {
+    return this.initialTime;
+  };
   HistoryService.prototype.cleanPersist = function () {};
   HistoryService.prototype.setExtraPersistedData = function () {};
   HistoryService.prototype.getExtraPersistedData = function () {
