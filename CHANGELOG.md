@@ -2,7 +2,7 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.0 — unveröffentlicht (Presence als Opt-in)
+# v1.3.0 — 2026-11-15 (Presence als Opt-in)
 
 **WLAN-Anwesenheit („Presence“) ist als optionale Funktion zurück.** Auf Anfrage aus der Community (Haushalt nur mit Apple-Geräten) zeigt das Plugin wieder an, ob ein Gerät — typisch ein iPhone — im Netz der FRITZ!Box ist. Standardmäßig ist die Funktion aus; sie wirkt nur für `presence`-Einträge mit `active: true`.
 
@@ -30,9 +30,15 @@ Ping-Prüfung (`ping`, `threshold`) und Telegram-Meldungen (`blockTelegram`) des
 
 Keine. Ohne `presence`-Konfiguration verhält sich das Plugin wie v1.2.x. Wer aus dem Original-Plugin noch `presence`-Einträge mit `active: true` in der Config hat, bekommt diese Sensoren jetzt wieder angezeigt.
 
+## Getestet
+
+Mock-Test in der CI (Node 22/24) und Hardwaretest am 15.11.2026: Homebridge 2.4.0, FRITZ!Box mit drei FRITZ!Repeatern im Mesh, iPhone mit fester privater WLAN-Adresse. Anmeldung erkannt, 25 min gesperrtes iPhone ohne Fehlwechsel, Abmeldung nach 309 s (300 s Verzögerung + Polling), erneute Anmeldung erkannt. Nicht getestet: Dauerlauf über Nacht, Motion-Typ, Gast-WLAN.
+
 ## Bekannte Limitationen
 
 - iPhones mit „private WLAN-Adresse: Rotierend“ wechseln die MAC; für das Heim-WLAN auf „Fest“ stellen (README).
+- Die am iPhone angezeigte WLAN-Adresse kann von der abweichen, die die FRITZ!Box führt (beobachtet mit FRITZ!Repeatern im Mesh). Maßgeblich ist die Adresse in der FRITZ!Box; eine dauerhaft zugewiesene IPv4-Adresse ist die robusteste Zuordnung.
+- Je Sensor nur eine Adresse.
 - Die FRITZ!Box meldet nur „verbunden“, nicht „Person anwesend“. Erkennung frühestens nach einem Polling-Zyklus (`options.polling.timer`) plus Verzögerung.
 - Jeder Zyklus fragt die Host-Liste der FRITZ!Box ab (zusätzliche Last).
 - Der Bewegungssensor zeigt in der Eve-App keinen Verlauf (fakegato gestubbt).

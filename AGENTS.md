@@ -169,7 +169,7 @@ Validation:
 
 6. **`registerPlatform`-Kennung vs npm-Paket-Name.** Plugin registriert sich in `index.mjs` als `'homebridge-fritz-platform'` (erster Arg), obwohl das npm-Paket `@pellebot/homebridge-fritz-platform-hb2` heißt. **Intentional**: cached Accessories aus dem Upstream-Plugin und aus den `6.1.0-hb2patch.x` Pre-Releases (mit `plugin: 'homebridge-fritz-platform'`-Feld) bleiben matched, kein iPhone-Re-Pairing nötig. Nicht ändern ohne Migration-Plan für bestehende User.
 
-7. **Presence und iPhones.** Private WLAN-Adresse (iOS) muss für das Heim-WLAN auf „Fest“ stehen, sonst passt die konfigurierte MAC nicht mehr. Schlafende iPhones verlassen kurz das WLAN → `offDelay` nie auf 0 empfehlen (Warnung im Log unter 60 s).
+7. **Presence und iPhones.** Private WLAN-Adresse (iOS) muss für das Heim-WLAN auf „Fest“ stehen, sonst passt die konfigurierte MAC nicht mehr. Adresse immer aus der FRITZ!Box übernehmen, nicht vom iPhone: Hardwaretest 15.11.2026 (FRITZ!Repeater im Mesh) zeigte abweichende MACs. Bei „Sensor bleibt aus“ zuerst die Geräteliste der FRITZ!Box prüfen. Schlafende iPhones verlassen kurz das WLAN → `offDelay` nie auf 0 empfehlen (Warnung im Log unter 60 s).
 
 8. **Config UI X zeigt nur was im `config.schema.json` ist.** Wenn ein neues Feld im Plugin-Code dazukommt, MUSS es auch ins Schema, sonst wird's nicht editierbar in der UI (User müsste die JSON manuell bearbeiten).
 

@@ -225,7 +225,13 @@ Die Funktion ist **Opt-in**: Ohne `presence`-Einträge mit `active: true` passie
 | `options.presence.anyone` | zusätzlicher Sensor „Anyone“: erkannt, solange mindestens ein Gerät erkannt ist |
 | `options.presence.guest` | zusätzlicher Sensor „Guest“: erkannt, solange ein Gerät im Gast-WLAN ist |
 
-**Wichtig für iPhone/iPad — private WLAN-Adresse:** iOS nutzt je WLAN eine eigene „private WLAN-Adresse“, die sich je nach Einstellung (*Rotierend*) regelmäßig ändert. Damit die Zuordnung hält: auf dem iPhone *Einstellungen → WLAN → (i) neben dem Heim-WLAN → Private WLAN-Adresse* auf **Fest** stellen (oder ausschalten), danach die in der FRITZ!Box angezeigte Adresse eintragen. Alternativ in der FRITZ!Box dem Gerät „immer die gleiche IPv4-Adresse zuweisen“ und die IP verwenden.
+**Wichtig für iPhone/iPad — private WLAN-Adresse:** iOS nutzt je WLAN eine eigene „private WLAN-Adresse“, die sich je nach Einstellung (*Rotierend*) regelmäßig ändert. Damit die Zuordnung hält:
+
+1. Auf dem iPhone *Einstellungen → WLAN → (i) neben dem Heim-WLAN → Private WLAN-Adresse* auf **Fest** stellen (oder ausschalten). Die neue Adresse gilt erst nach dem nächsten Verbinden: WLAN einmal aus- und wieder einschalten.
+2. Die Adresse **aus der FRITZ!Box** übernehmen (*Heimnetz → Netzwerk → Gerät → Heimnetz*), **nicht** die am iPhone angezeigte. Beide können abweichen, im Test mit FRITZ!Repeatern im Mesh war das der Fall.
+3. Empfohlen: dort zusätzlich **„IPv4-Adresse dauerhaft zuweisen“** aktivieren. Dann ist auch die IP als `address` stabil.
+
+Bleibt ein Sensor dauerhaft auf „nicht erkannt“, obwohl das Gerät im WLAN ist: in der FRITZ!Box nachsehen, unter welcher MAC/IP es gerade geführt wird, und die Config anpassen.
 
 **Warum die Abmeldeverzögerung:** Schlafende iPhones trennen sich zum Stromsparen immer wieder kurz vom WLAN. Ohne Verzögerung springt der Sensor ständig zwischen „zu Hause“ und „weg“. `offDelay` unter 60 s erzeugt deshalb eine Warnung im Log; 300 s (5 min) ist ein guter Startwert, bei Fehlalarmen auf 600–900 s erhöhen. Die Erkennung ist so schnell wie das Polling (`options.polling.timer`, Standard 15 s) plus Verzögerung.
 

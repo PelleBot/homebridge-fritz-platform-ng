@@ -732,7 +732,7 @@
             "title": "IP or MAC address",
             "type": "string",
             "placeholder": "AA:BB:CC:DD:EE:FF",
-            "description": "IPv4 or MAC address of the device as shown in the FRITZ!Box (Heimnetz > Netzwerk). iPhones use a private Wi-Fi address: set it to \"Fixed\" for the FRITZ!Box network and use that address here.",
+            "description": "IPv4 or MAC address of the device as shown in the FRITZ!Box (Heimnetz > Netzwerk). iPhones use a private Wi-Fi address: set it to \"Fixed\" for the home network, reconnect once, then copy the address from the FRITZ!Box device details (not the one shown on the phone). Tip: assign a permanent IPv4 address in the FRITZ!Box.",
             "required": true
           },
           "accType": {
