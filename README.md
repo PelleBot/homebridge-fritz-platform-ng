@@ -228,8 +228,8 @@ Die Funktion ist **Opt-in**: Ohne `presence`-Einträge mit `active: true` passie
 **Wichtig für iPhone/iPad — private WLAN-Adresse:** iOS nutzt je WLAN eine eigene „private WLAN-Adresse“, die sich je nach Einstellung (*Rotierend*) regelmäßig ändert. Damit die Zuordnung hält:
 
 1. Auf dem iPhone *Einstellungen → WLAN → (i) neben dem Heim-WLAN → Private WLAN-Adresse* auf **Fest** stellen (oder ausschalten). Die neue Adresse gilt erst nach dem nächsten Verbinden: WLAN einmal aus- und wieder einschalten.
-2. Die Adresse **aus der FRITZ!Box** übernehmen (*Heimnetz → Netzwerk → Gerät → Heimnetz*), **nicht** die am iPhone angezeigte. Beide können abweichen, im Test mit FRITZ!Repeatern im Mesh war das der Fall.
-3. Empfohlen: dort zusätzlich **„IPv4-Adresse dauerhaft zuweisen“** aktivieren. Dann ist auch die IP als `address` stabil.
+2. In der FRITZ!Box das Gerät öffnen (*Heimnetz → Netzwerk → Gerät → Heimnetz*) und die **MAC-Adresse von dort** übernehmen, **nicht** die am iPhone angezeigte. Beide können abweichen, im Test mit FRITZ!Repeatern im Mesh war das der Fall.
+3. **Besser:** dort **„IPv4-Adresse dauerhaft zuweisen“** aktivieren und diese IP als `address` eintragen. Das ist die robusteste Zuordnung.
 
 Bleibt ein Sensor dauerhaft auf „nicht erkannt“, obwohl das Gerät im WLAN ist: in der FRITZ!Box nachsehen, unter welcher MAC/IP es gerade geführt wird, und die Config anpassen.
 

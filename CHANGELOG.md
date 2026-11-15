@@ -37,7 +37,7 @@ Mock-Test in der CI (Node 22/24) und Hardwaretest am 15.11.2026: Homebridge 2.4.
 ## Bekannte Limitationen
 
 - iPhones mit „private WLAN-Adresse: Rotierend“ wechseln die MAC; für das Heim-WLAN auf „Fest“ stellen (README).
-- Die am iPhone angezeigte WLAN-Adresse kann von der abweichen, die die FRITZ!Box führt (beobachtet mit FRITZ!Repeatern im Mesh). Maßgeblich ist die Adresse in der FRITZ!Box; eine dauerhaft zugewiesene IPv4-Adresse ist die robusteste Zuordnung.
+- Die am iPhone angezeigte WLAN-Adresse kann von der abweichen, die die FRITZ!Box führt (beobachtet mit FRITZ!Repeatern im Mesh). MAC-Adresse aus der FRITZ!Box-Oberfläche nehmen oder besser die IPv4-Adresse dort dauerhaft zuweisen und die IP eintragen.
 - Je Sensor nur eine Adresse.
 - Die FRITZ!Box meldet nur „verbunden“, nicht „Person anwesend“. Erkennung frühestens nach einem Polling-Zyklus (`options.polling.timer`) plus Verzögerung.
 - Jeder Zyklus fragt die Host-Liste der FRITZ!Box ab (zusätzliche Last).
