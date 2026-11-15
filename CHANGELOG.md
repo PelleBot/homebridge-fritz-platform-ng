@@ -2,6 +2,22 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.3.1 — unveröffentlicht (Wizard: weniger Knöpfe)
+
+**Schritt 5 des Setup-Wizards ist aufgeräumt.** Rückmeldung aus dem Betrieb: zu viele Knöpfe für eine Aufgabe.
+
+## Änderungen
+
+- Es gibt nur noch einen Speichern-Knopf: Der „Save“-Knopf von Config UI X wird im Wizard ausgegraut (`homebridge.disableSaveButton()`, bei älteren Versionen ohne diese Funktion bleibt er unverändert).
+- Der Knopf „Homebridge jetzt neu starten“ entfällt. Er konnte aus dem Wizard heraus nicht neu starten (die Plugin-UI-Schnittstelle bietet das nicht an) und zeigte danach einen zweiten Hinweiskasten mit `sudo hb-service restart`. Nach dem Speichern erscheint jetzt ein einziger Hinweis: Neustart über das Symbol oben rechts in Config UI X.
+- Einleitungstext von Schritt 5 gekürzt.
+
+## Breaking Changes
+
+Keine. Config-Format unverändert.
+
+---
+
 # v1.3.0 — 2026-11-15 (Presence als Opt-in)
 
 **WLAN-Anwesenheit („Presence“) ist als optionale Funktion zurück.** Auf Anfrage aus der Community (Haushalt nur mit Apple-Geräten) zeigt das Plugin wieder an, ob ein Gerät — typisch ein iPhone — im Netz der FRITZ!Box ist. Standardmäßig ist die Funktion aus; sie wirkt nur für `presence`-Einträge mit `active: true`.

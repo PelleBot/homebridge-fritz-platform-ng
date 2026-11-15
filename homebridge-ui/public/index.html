@@ -7,7 +7,7 @@
     C. Device discovery — Step 2 with auto-detected accType per device
     D. Energy 250 OBIS-Reader auto-setup — Step 3 (4 tiles per reader)
     E. Router-Switches — Step 4 (master.options pre-hydrated from config)
-    F. Save + Apply — Step 5 (writes config.json, restarts Homebridge)
+    F. Save — Step 5 (writes config.json; restart via the Config UI X toolbar)
     G. Edit-Mode — re-run preserves user edits (tile names, accType, energy
        display type, router-switches) by hydrating wizardState from the
        existing config.json. Step 5 shows a diff of pending changes.
@@ -351,9 +351,8 @@
     <div class="step-pane" id="step-5">
       <div class="alert alert-info">
         <strong>Schritt 5 — Konfiguration speichern</strong><br>
-        Zusammenfassung deiner Auswahl. Klick auf <em>"Konfiguration speichern"</em>
-        unten um die <code>config.json</code> zu aktualisieren. Danach musst du
-        Homebridge neu starten damit die Änderungen wirksam werden.
+        Prüfe die Zusammenfassung und speichere. Wirksam wird die Änderung nach einem
+        Neustart von Homebridge.
       </div>
 
       <div id="saveSummary" style="margin-top: 1rem;"></div>
@@ -390,6 +389,14 @@
       presence: null,             // v1.3.0: [{ active, name, address, accType, onDelay?, offDelay }] (null = not touched yet)
       presenceOptions: null,      // v1.3.0: { anyone, guest, accType }
     };
+
+    // v1.3.1: the wizard saves via its own button. Grey out the Config UI X
+    // "Save" button so there is exactly one way to save.
+    try {
+      homebridge.disableSaveButton();
+    } catch (e) {
+      // older Config UI X without this API: leave the button as it is
+    }
 
     // ============ DOM References ============
     const stepPanes = {
@@ -1076,31 +1083,10 @@
 
         saveResult.innerHTML = `
           <div class="alert alert-success">
-            <strong>✓ Konfiguration gespeichert.</strong><br>
-            Damit die Änderungen wirksam werden, muss Homebridge neu gestartet werden.
-          </div>
-          <div class="text-center" style="margin-top: 1rem;">
-            <button id="restartBtn" class="btn btn-warning btn-lg">🔄 Homebridge jetzt neu starten</button>
-            <div style="margin-top: 0.5rem;">
-              <small class="text-muted">Alternativ später via Config UI X "Restart"-Button.</small>
-            </div>
+            <strong>✓ Gespeichert.</strong>
+            Zum Aktivieren Homebridge neu starten: in Config UI X oben rechts über das Neustart-Symbol.
           </div>
         `;
-
-        document.getElementById('restartBtn').addEventListener('click', async () => {
-          try {
-            await homebridge.restartHomebridge();
-          } catch (err) {
-            // If restartHomebridge isn't available (e.g. standalone mode without
-            // hb-service), show a manual instruction.
-            saveResult.innerHTML +=
-              '<div class="alert alert-info" style="margin-top: 1rem;">' +
-              'Automatischer Restart nicht verfügbar. Bitte Homebridge manuell ' +
-              'neu starten: <code>sudo hb-service restart</code> oder über die ' +
-              'Config UI X Toolbar.' +
-              '</div>';
-          }
-        });
       } catch (err) {
         saveResult.innerHTML = `
           <div class="alert alert-danger">
