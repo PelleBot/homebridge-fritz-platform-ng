@@ -4,7 +4,7 @@
   <img src="branding/Icon.png" alt="Plugin Logo" width="160">
 </p>
 
-> Homebridge 2.0 plugin für AVM FRITZ!DECT Geräte und FRITZ!Box Router-Switches. Fokus: produktiver Betrieb auf Homebridge 2.0 mit Node 22 / 24.
+> Homebridge 2.0 plugin für AVM FRITZ!DECT Geräte und FRITZ!Box Router-Switches. Fokus: produktiver Betrieb auf Homebridge 2.0 mit Node 22 / 24 / 26.
 
 [![npm version](https://img.shields.io/npm/v/@pellebot/homebridge-fritz-platform-hb2.svg?style=flat-square)](https://www.npmjs.com/package/@pellebot/homebridge-fritz-platform-hb2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
