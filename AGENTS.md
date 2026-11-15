@@ -31,7 +31,7 @@ Du bist Claude, ein LLM-Agent. Du wirst von **PelleBot** (Repo-Maintainer, IT-Ma
 - Setup-Wizard in Config UI X (`homebridge-ui/`, seit v1.1.0, Edit-Mode seit v1.2.0)
 - **Presence (WLAN-Anwesenheit) als Opt-in** seit v1.3.0 (Entscheidung PelleBot 2026-11-14): Occupancy-/Motion-Sensor je Gerät (IP oder MAC), optional „Anyone“ und „Guest“, Pflicht-Abmeldeverzögerung `offDelay` (Standard 300 s). Standardmäßig aus. Nicht enthalten: Telegram-Meldungen, Ping-Prüfung.
 - Homebridge 1.8.5+ und Homebridge 2.0+
-- Node.js 22.x und 24.x
+- Node.js 22.x, 24.x und 26.x
 - FritzBox-Modelle 7xxx/6xxx mit FRITZ!OS 7.x+
 
 **Out of Scope (Issues + PRs dazu ablehnen mit klarem Verweis):**
