@@ -2,6 +2,23 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.2.1 — 2026-11-14 (Bugfix: Absturz bei offenem Fenster)
+
+**Behebt #2.** Sobald ein Thermostat ein offenes Fenster meldete (`windowOpen: 1`) oder ein Kontakt-/Fenstersensor öffnete, stürzte die Child-Bridge mit `TypeError: historyService.getInitialTime is not a function` ab. Nach fünf Abstürzen stoppte Homebridge die Child-Bridge, und das ganze Plugin fiel aus, solange das Fenster offen war.
+
+## Ursache
+
+Der NoOp-Ersatz für fakegato-history in `src/platform.js` bildete nur `addEntry`, `cleanPersist`, `setExtraPersistedData` und `getExtraPersistedData` nach. Die Handler für `smarthome-contact` und `smarthome-window` rufen zusätzlich `getInitialTime()` auf, um die Eve-Werte `LastActivation` und `ClosedDuration` zu berechnen.
+
+## Änderung
+
+- Der Stub merkt sich beim Erzeugen den Zeitpunkt (Unix-Sekunden) und gibt ihn über `getInitialTime()` zurück. Die Eve-Dauerwerte zählen damit ab Start der Bridge.
+- Abgleich aller `historyService.*`-Aufrufe in den aktiven Pfaden (`smarthome/`, `router/`, `extras/`): verwendet werden nur `addEntry` und `getInitialTime` – beide sind jetzt im Stub vorhanden.
+
+## Breaking Changes
+
+Keine.
+
 # v1.2.0 — 2026-05-14 (Wizard Edit-Mode / Phase G)
 
 **Setup-Wizard erhält Aktualisierungs-Routine.** Beim erneuten Aufruf des Wizards (z.B. um ein weiteres Gerät hinzuzufügen) werden die in `config.json` gespeicherten Einstellungen jetzt vorgeladen statt überschrieben. Damit ist der Hauptschmerz aus v1.1.x adressiert: manuell vergebene Tile-Namen, gewählter `accType` (z.B. `energy-light` statt `energy-temperature`) und Router-Switch-Zustände überleben einen Wizard-Re-Run unverändert.
