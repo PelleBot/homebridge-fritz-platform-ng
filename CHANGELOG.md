@@ -2,6 +2,50 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
+# v1.3.0 — 2026-11-15 (Presence als Opt-in)
+
+**WLAN-Anwesenheit („Presence“) ist als optionale Funktion zurück.** Auf Anfrage aus der Community (Haushalt nur mit Apple-Geräten) zeigt das Plugin wieder an, ob ein Gerät — typisch ein iPhone — im Netz der FRITZ!Box ist. Standardmäßig ist die Funktion aus; sie wirkt nur für `presence`-Einträge mit `active: true`.
+
+## Neuerungen
+
+- **Presence-Sensor je Gerät**: Zuordnung über IPv4- oder MAC-Adresse (Groß-/Kleinschreibung egal), Accessory-Typ `occupancy` (Belegungssensor, Standard) oder `motion` (Bewegungssensor). Grundlage ist der vorhandene Code des Original-Plugins in `src/accessories/presence/`, nach dem Minimal-Patch-Prinzip wieder eingebunden.
+- **Abmeldeverzögerung `offDelay`** (Standard **300 s**): Der Sensor meldet „weg“ erst, wenn das Gerät so lange nicht mehr verbunden war. Verhindert das Springen, wenn ein schlafendes iPhone kurz aus dem WLAN geht. Unter 60 s warnt das Log. `onDelay` (Standard 0 s) für die Anmeldung.
+- **Optional „Anyone“** (jemand ist zu Hause) und **„Guest“** (Gerät im Gast-WLAN) über `options.presence`.
+- **`config.schema.json`**: neuer Abschnitt „Presence (WLAN, optional)“ und `options.presence`.
+- **Setup-Wizard**: Schritt 4 hat einen aufklappbaren Abschnitt „Anwesenheit per WLAN“ (Geräte anlegen, Anyone/Guest). Bestehende `presence`-Einträge werden beim erneuten Speichern übernommen und nicht mehr verworfen.
+- **CI**: Mock-Test `ci/presence-mock-test.cjs` (Opt-in, Verzögerung, MAC-Abgleich, Anyone/Guest) auf Node 22 und 24.
+
+## Korrekturen am übernommenen Code
+
+- MAC-Adressen in Kleinbuchstaben wurden bisher verworfen bzw. nicht gefunden; jetzt werden sie normalisiert und ohne Beachtung der Schreibweise abgeglichen.
+- Fehlt `offDelay`, gilt jetzt 300 s statt 0 s (vorher sprang der Sensor bei jeder kurzen WLAN-Abmeldung). Ein ausdrücklich gesetzter Wert, auch 0, bleibt erhalten.
+- Aufruf von `historyService.getInitialTime()` im Motion-Pfad wird defensiv geprüft (siehe Issue #2).
+- `src/accessories/presence/` ist nicht mehr in `.npmignore` ausgeschlossen (sonst fehlte der Code im npm-Paket).
+
+## Nicht übernommen
+
+Ping-Prüfung (`ping`, `threshold`) und Telegram-Meldungen (`blockTelegram`) des Original-Plugins.
+
+## Breaking Changes
+
+Keine. Ohne `presence`-Konfiguration verhält sich das Plugin wie v1.2.x. Wer aus dem Original-Plugin noch `presence`-Einträge mit `active: true` in der Config hat, bekommt diese Sensoren jetzt wieder angezeigt.
+
+## Getestet
+
+Mock-Test in der CI (Node 22/24) und Hardwaretest am 15.11.2026: Homebridge 2.4.0, FRITZ!Box mit drei FRITZ!Repeatern im Mesh, iPhone mit fester privater WLAN-Adresse. Anmeldung erkannt, 25 min gesperrtes iPhone ohne Fehlwechsel, Abmeldung nach 309 s (300 s Verzögerung + Polling), erneute Anmeldung erkannt. Nicht getestet: Dauerlauf über Nacht, Motion-Typ, Gast-WLAN.
+
+## Bekannte Limitationen
+
+- iPhones mit „private WLAN-Adresse: Rotierend“ wechseln die MAC; für das Heim-WLAN auf „Fest“ stellen (README).
+- Die am iPhone angezeigte WLAN-Adresse kann von der abweichen, die die FRITZ!Box führt (beobachtet mit FRITZ!Repeatern im Mesh). MAC-Adresse aus der FRITZ!Box-Oberfläche nehmen oder besser die IPv4-Adresse dort dauerhaft zuweisen und die IP eintragen.
+- Je Sensor nur eine Adresse.
+- Die FRITZ!Box meldet nur „verbunden“, nicht „Person anwesend“. Erkennung frühestens nach einem Polling-Zyklus (`options.polling.timer`) plus Verzögerung.
+- Jeder Zyklus fragt die Host-Liste der FRITZ!Box ab (zusätzliche Last).
+- Der Bewegungssensor zeigt in der Eve-App keinen Verlauf (fakegato gestubbt).
+- Die Charakteristik „Last Activation“ des Bewegungssensors zählt ab Start der Bridge (fakegato-Stub mit `getInitialTime()` aus v1.2.1).
+
+---
+
 # v1.2.1 — 2026-11-14 (Bugfix: Absturz bei offenem Fenster)
 
 **Behebt #2.** Sobald ein Thermostat ein offenes Fenster meldete (`windowOpen: 1`) oder ein Kontakt-/Fenstersensor öffnete, stürzte die Child-Bridge mit `TypeError: historyService.getInitialTime is not a function` ab. Nach fünf Abstürzen stoppte Homebridge die Child-Bridge, und das ganze Plugin fiel aus, solange das Fenster offen war.
@@ -18,6 +62,8 @@ Der NoOp-Ersatz für fakegato-history in `src/platform.js` bildete nur `addEntry
 ## Breaking Changes
 
 Keine.
+
+---
 
 # v1.2.0 — 2026-05-14 (Wizard Edit-Mode / Phase G)
 

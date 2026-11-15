@@ -30,6 +30,14 @@ const Setup = (devices, presenceConfig, presenceOptions) => {
       error = true;
     }
 
+    if (!error && user.offDelay < 60) {
+      logger.warn(
+        `offDelay is ${user.offDelay}s. Sleeping iPhones often leave the WLAN for a few minutes; ` +
+          'values below 60s will make the sensor flap. Recommended: 300s or more.',
+        user.name
+      );
+    }
+
     if (!error) {
       const uuid = UUIDgenerate(user.name);
 

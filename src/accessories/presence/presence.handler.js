@@ -42,7 +42,8 @@ class Handler {
 
       subtype = subtype || accessory.context.config.subtype;
 
-      if (historyService) {
+      // The fakegato stub may not implement getInitialTime() (see issue #2)
+      if (historyService && typeof historyService.getInitialTime === 'function') {
         const lastActivation = moment().unix() - historyService.getInitialTime();
 
         accessory
@@ -123,9 +124,7 @@ class Handler {
       let oldState = accessory.getService(service).getCharacteristic(characteristic).value;
       let newState = oldState;
 
-      const host = this.hosts.find(
-        (host) => host.ip === accessory.context.config.address || host.mac === accessory.context.config.address
-      );
+      const host = this.hosts.find((host) => this.matchesHost(host, accessory.context.config.address));
 
       if (host) {
         logger.debug(host, `${accessory.displayName} (${subtype})`);
@@ -227,6 +226,13 @@ class Handler {
     return state;
   }
 
+  // IP match, or case-insensitive MAC match (host.mac may be empty)
+  matchesHost(host, address) {
+    if (!host || !address) return false;
+    if (host.ip === address) return true;
+    return typeof host.mac === 'string' && host.mac.toUpperCase() === String(address).toUpperCase();
+  }
+
   // eslint-disable-next-line no-unused-vars
   async set(state, accessory, subtype, ownCharacteristic) {}
 
@@ -246,11 +252,7 @@ class Handler {
         );
 
         for (const accessory of userAccessories) {
-          const host = this.hosts.find(
-            (host) =>
-              host.ip === accessory.context.config.address ||
-              host.mac.toLowerCase() === accessory.context.config.address.toLowerCase()
-          );
+          const host = this.hosts.find((host) => this.matchesHost(host, accessory.context.config.address));
 
           if (!host) {
             logger.debug(

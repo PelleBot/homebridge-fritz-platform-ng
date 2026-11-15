@@ -41,7 +41,8 @@ class Handler {
 
       subtype = subtype || accessory.context.config.subtype;
 
-      if (historyService) {
+      // The fakegato stub may not implement getInitialTime() (see issue #2)
+      if (historyService && typeof historyService.getInitialTime === 'function') {
         const lastActivation = moment().unix() - historyService.getInitialTime();
 
         accessory

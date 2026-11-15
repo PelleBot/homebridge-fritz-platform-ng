@@ -7,7 +7,7 @@ const { version } = require('../package.json');
 const Telegram = require('./lib/telegram');
 
 // Accessories — DECT-only Minimal-Patch-Fork.
-// Out-of-scope subsystems (callmonitor, presence, network, wol, childlock) are not
+// Out-of-scope subsystems (callmonitor, network, wol, childlock) are not
 // wired in here. Their directories remain in src/accessories/ as dead code — they
 // are intentionally not deleted because router/router.accessory.js still has a
 // top-level require('../extras/extras.handler') that would fail at load time
@@ -41,6 +41,15 @@ const {
   SHWindowSwitchAccessory,
   SHSetup,
 } = require('./accessories/smarthome/smarthome');
+
+// Presence (WLAN occupancy/motion sensors) — opt-in since v1.3.0.
+// Only devices with `active: true` in config.presence (plus the optional
+// "Anyone"/"Guest" sensors from options.presence) are exposed.
+const {
+  PresenceMotionAccessory,
+  PresenceOccupancyAccessory,
+  PresenceSetup,
+} = require('./accessories/presence/presence');
 
 //Custom Types
 const CustomTypes = require('./types/custom.types');
@@ -120,6 +129,10 @@ function FritzPlatform(log, config, api) {
 
   if (this.config.smarthome) {
     SHSetup(this.devices, this.config.smarthome);
+  }
+
+  if (this.config.presence.length || this.config.options.presence.guest) {
+    PresenceSetup(this.devices, this.config.presence, this.config.options.presence);
   }
 
   this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
@@ -232,6 +245,11 @@ FritzPlatform.prototype = {
           new SHEnergyTemperatureAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
         else if (device.subtype === 'smarthome-energy-light')
           new SHEnergyLightAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
+        break;
+      case 'presence':
+        if (device.subtype === 'motion')
+          new PresenceMotionAccessory(this.api, accessory, this.accessories, this.meshMaster, HistoryService);
+        else new PresenceOccupancyAccessory(this.api, accessory, this.accessories, this.meshMaster);
         break;
       default:
         logger.warn(`Can not setup accessory, type (${device.type}) unknown!`, device.name);

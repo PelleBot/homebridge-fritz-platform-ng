@@ -28,7 +28,7 @@ jobs:
       - name: Syntax check on all src/*.js files
         run: |
           fail=0
-          for f in $(find src index.mjs -name "*.js" -o -name "*.mjs"); do
+          for f in $(find src ci index.mjs -name "*.js" -o -name "*.mjs" -o -name "*.cjs"); do
             if ! node --check "$f" 2>&1; then
               echo "❌ Syntax error in $f"
               fail=$((fail+1))
@@ -84,6 +84,9 @@ jobs:
             }
           }).catch(e => { console.error('IMPORT FAIL:', e.message); process.exit(1); });
           "
+
+      - name: Presence mock test (opt-in, offDelay, Anyone/Guest)
+        run: node ci/presence-mock-test.cjs
 
   lint:
     name: Lint

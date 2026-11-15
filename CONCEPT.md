@@ -82,7 +82,7 @@ In **keiner** dieser Situationen interagiert Claude direkt mit GitHub. Maintaine
 
 Datei im Repo-Root, primär für **Claude-Sessions des Maintainers** (nicht für GitHub Actions). Inhalte:
 
-- Projekt-Scope (DECT-only, was bewusst rausfällt)
+- Projekt-Scope (DECT-Geräte und Router-Switches, seit v1.3.0 WLAN-Anwesenheit als Opt-in; was bewusst rausfällt)
 - Architektur-Übersicht (welche Files machen was, Migration-Kontext von v6.0.19 → v6.1.x)
 - Konventionen (Code-Style, Commit-Format, Eve-Charakteristiken via String-Literalen)
 - Bekannte Fallstricke (z.B. "fakegato-history ist HAP-v2-inkompatibel, gestubbt — Eve-History-Graphen gehen nicht; Apple Home zeigt keine Eve-Custom-Charakteristiken nativ")
@@ -197,6 +197,10 @@ Ein Release ist *productive-ready* wenn:
 5. README erklärt Installation, Config-Beispiele, bekannte Limitationen
 6. CHANGELOG dokumentiert alle Änderungen seit letztem Release
 7. Maintainer hat mit eigener produktiver Instanz mindestens 48h problemfrei laufen lassen
+
+## Scope-Entscheidungen
+
+- **2026-11-14 — Presence (WLAN-Anwesenheit) als Opt-in in v1.3.0.** Auf Community-Anfrage (Haushalt nur mit Apple-Geräten) vom Maintainer entschieden, gegen die Empfehlung „Scope halten“. Umsetzung nach dem Minimal-Patch-Prinzip: der vorhandene Code aus dem Original-Plugin (`src/accessories/presence/`) wird wieder eingebunden, standardmäßig aus, mit Pflicht-Abmeldeverzögerung (Standard 300 s). Nicht übernommen: Telegram-Meldungen, Ping-Prüfung. Bekannte Risiken: kurze WLAN-Abmeldungen schlafender iPhones, private WLAN-Adressen, zusätzliche Abfragelast auf der FRITZ!Box.
 
 ## Risiken & Bekannte Beschränkungen
 
