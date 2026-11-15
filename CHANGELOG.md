@@ -2,7 +2,7 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.1 — unveröffentlicht (Wizard: weniger Knöpfe)
+# v1.3.1 — 2026-11-15 (Wizard: weniger Knöpfe)
 
 **Schritt 5 des Setup-Wizards ist aufgeräumt.** Rückmeldung aus dem Betrieb: zu viele Knöpfe für eine Aufgabe.
 
