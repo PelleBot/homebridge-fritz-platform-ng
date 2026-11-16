@@ -2,7 +2,22 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.3 — unveröffentlicht (Wizard-Verbindungstest #1, Sicherheit, Homebridge-Verifizierung)
+# v1.3.4 — unveröffentlicht (Wizard: Speichern über Homebridge, Neustart-Angebot)
+
+**Nach dem Speichern bietet Homebridge selbst den Neustart der FritzBox-Child-Bridge an.**
+
+## Änderungen
+
+- Schritt 5 übergibt die neue Konfiguration nur noch an die Homebridge-Oberfläche und aktiviert deren Knopf **Save** (deutsch: **Speichern**). Der eigene Knopf „Konfiguration speichern“ entfällt.
+- **Save** speichert, schließt das Fenster und öffnet den Dialog „Restart Required“ mit genau der betroffenen Child-Bridge. Ein Plugin-Fenster kann selbst keinen Neustart auslösen; bisher fehlte dieser Dialog, weil der Wizard selbst speicherte.
+- Der bisherige Hinweis „Neustart oben rechts“ war falsch (dort gibt es kein Neustart-Symbol) und entfällt.
+- In den Schritten 1–4 bleibt **Save** ausgegraut; nach „Zurück“ aus Schritt 5 ebenfalls, damit nur die geprüfte Konfiguration gespeichert wird.
+
+## Geprüft
+
+- Config UI X 5.30.1 auf dem M4: Wizard bis Schritt 5, Save in Schritt 1–4 gesperrt und in Schritt 5 aktiv, nach Save Dialog „Restart Required“ mit der FritzBox-Child-Bridge; gespeicherte Konfiguration inhaltlich unverändert.
+
+# v1.3.3 — 2026-11-16 (Wizard-Verbindungstest #1, Sicherheit, Homebridge-Verifizierung)
 
 **Der Verbindungstest im Setup-Wizard hängt nicht mehr, und das Plugin hat keine bekannten Sicherheitslücken in seinen Abhängigkeiten mehr.**
 
