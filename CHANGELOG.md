@@ -2,7 +2,17 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.2 — unveröffentlicht (Node 26)
+# v1.3.3 — unveröffentlicht (Wizard-Verbindungstest, Issue #1)
+
+**Der Verbindungstest im Setup-Wizard hängt nicht mehr.** Antwortete die FritzBox nicht, wartete „Verbindung testen“ bisher endlos, weil die Bibliothek `@seydx/fritzbox` ohne Zeitlimit anfragt (#1).
+
+## Änderungen
+
+- Verbindungstest (Schritt 1) bricht nach 15 Sekunden ab, die Geräteerkennung (Schritt 2) nach 30 Sekunden.
+- Nach einem Abbruch prüft der Wizard die beteiligten Ports (TR-064, bei SSL zusätzlich 49443, Smart-Home-Schnittstelle Port 80) und nennt im Hinweis die wahrscheinliche Ursache, z. B. „SSL ausschalten“ oder „Zugriff für Anwendungen zulassen“.
+- Keine Änderung am Plugin-Betrieb selbst, nur an der Wizard-Oberfläche.
+
+# v1.3.2 — 2026-11-15 (Node 26)
 
 **Node.js 26 wird offiziell unterstützt.** Homebridge 2.5 läuft auf Node 22, 24 und 26; das Plugin deklariert jetzt dieselben Versionen.
 
