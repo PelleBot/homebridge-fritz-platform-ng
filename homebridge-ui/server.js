@@ -20,7 +20,7 @@
 const { HomebridgePluginUiServer } = require('@homebridge/plugin-ui-utils');
 const { version } = require('../package.json');
 const net = require('net');
-const Fritzbox = require('@seydx/fritzbox');
+const Fritzbox = require('../src/lib/fritzbox/fritzbox');
 
 // @seydx/fritzbox (got) sets no request timeout. If the FritzBox accepts a
 // connection but never answers (typically the TR-064 HTTPS port when ssl is on),

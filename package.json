@@ -6,6 +6,25 @@
   "icon": "https://raw.githubusercontent.com/PelleBot/homebridge-fritz-platform-ng/main/branding/Icon.png",
   "type": "module",
   "main": "index.mjs",
+  "files": [
+    "index.mjs",
+    "src/",
+    "homebridge-ui/",
+    "branding/",
+    "config.schema.json",
+    "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "DEBUG.md",
+    "LICENSE",
+    "!branding/*.jpg",
+    "!branding/*.jpeg",
+    "!src/accessories/callmonitor/",
+    "!src/accessories/childlock/",
+    "!src/accessories/network/",
+    "!src/accessories/wol/",
+    "!src/lib/callmonitor.js"
+  ],
   "scripts": {
     "lint": "eslint --fix ."
   },
@@ -35,6 +54,7 @@
     "fritzbox",
     "homebridge",
     "homebridge-plugin",
+    "supports-hap",
     "plugin",
     "dect",
     "smarthome",
@@ -51,12 +71,17 @@
   },
   "dependencies": {
     "@homebridge/plugin-ui-utils": "^2.0.0",
-    "@seydx/fritzbox": "^2.3.1",
+    "cheerio": "^1.0.0-rc.10",
+    "debug": "^4.3.2",
     "fakegato-history": "0.6.2",
     "form-data": "^4.0.0",
     "fs-extra": "10.0.0",
+    "got": "^11.8.6",
     "moment": "^2.29.1",
-    "ping": "0.4.1"
+    "ping": "0.4.1",
+    "rxjs": "^7.3.1",
+    "xml2js": "^0.6.2",
+    "xmlbuilder": "^15.1.1"
   },
   "devDependencies": {
     "@babel/core": "7.15.5",
