@@ -1,6 +1,6 @@
 'use strict';
 
-const { requestLUA } = require('@seydx/fritzbox/lib/request');
+const { requestLUA } = require('../../lib/fritzbox/request');
 const logger = require('../../utils/logger');
 const { initReboot } = require('./router.utils');
 const Telegram = require('../../lib/telegram');

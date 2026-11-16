@@ -2,7 +2,36 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.2 — unveröffentlicht (Node 26)
+# v1.3.3 — unveröffentlicht (Wizard-Verbindungstest #1, Sicherheit, Homebridge-Verifizierung)
+
+**Der Verbindungstest im Setup-Wizard hängt nicht mehr, und das Plugin hat keine bekannten Sicherheitslücken in seinen Abhängigkeiten mehr.**
+
+## Wizard-Verbindungstest (#1)
+
+- Antwortete die FritzBox nicht, wartete „Verbindung testen“ bisher endlos. Der Test bricht jetzt nach 15 Sekunden ab, die Geräteerkennung nach 30 Sekunden.
+- Nach einem Abbruch prüft der Wizard die beteiligten Ports (TR-064, bei SSL zusätzlich 49443, Smart-Home-Schnittstelle Port 80) und nennt die wahrscheinliche Ursache, z. B. „SSL ausschalten“ oder „Zugriff für Anwendungen zulassen“.
+
+## Sicherheit: FritzBox-Bibliothek übernommen
+
+- `@seydx/fritzbox` (seit 2022 ungepflegt) ist jetzt Teil des Plugins (`src/lib/fritzbox/`, MIT-Lizenz beibehalten). `npm audit` meldete über diese Bibliothek 3 kritische, 1 hohe und 3 mittlere Schwachstellen (`crypto-js`, `class-validator`, `validator`, `class-transformer`, `xml2js` < 0.5). Jetzt: 0.
+- Digest-Anmeldung an TR-064 neu mit Node-eigenem `crypto` (ersetzt `@mreal/digest-auth`), `xml2js` auf 0.6.2.
+- Das FritzBox-Passwort wird nicht mehr zusätzlich als Basic-Anmeldung gesendet. Bisher ging es so bei jeder TR-064-Anfrage lesbar ins Heimnetz, auch bei eingeschaltetem SSL (die erste Anfrage läuft über HTTP).
+- Jede Anfrage an die FritzBox hat ein Zeitlimit von 20 Sekunden; vorher konnte eine nicht antwortende FritzBox eine Abfrage unbegrenzt blockieren.
+- Bei falschen Zugangsdaten wird die Digest-Anmeldung genau einmal versucht.
+
+## Homebridge-Verifizierung
+
+- `package.json`: Schlüsselwort `supports-hap`; `files`-Liste, damit nur Plugin-Dateien im npm-Paket landen.
+- `config.schema.json`: Schema als `{ "type": "object", "properties": { … } }` (vorher ohne `type`, Felder direkt unter `schema`). Inhalt unverändert.
+
+## Geprüft
+
+- Alte und neue Bibliothek gegen eine FRITZ!Box mit 17 Smart-Home-Geräten, mit und ohne SSL: gleiche Gerätestruktur, gleiche Antworten der TR-064-Aktionen, AHA-Abfrage unverändert.
+- Plugin 75 Sekunden in einer getrennten Test-Homebridge: 48 Geräte angelegt, Temperaturen, Batteriestände und Anwesenheit abgefragt, keine Fehler.
+- Mock-FritzBox: falsches Passwort → genau eine Digest-Wiederholung, dann Fehlermeldung; keine Antwort → Wizard meldet nach 15 Sekunden mit Portdiagnose.
+- Digest gegen das Beispiel aus RFC 2617; Syntax-, Lade- und Presence-Mocktest der CI.
+
+# v1.3.2 — 2026-11-15 (Node 26)
 
 **Node.js 26 wird offiziell unterstützt.** Homebridge 2.5 läuft auf Node 22, 24 und 26; das Plugin deklariert jetzt dieselben Versionen.
 

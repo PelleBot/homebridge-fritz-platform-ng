@@ -1,6 +1,6 @@
 'use strict';
 
-const Fritzbox = require('@seydx/fritzbox');
+const Fritzbox = require('../../lib/fritzbox/fritzbox');
 const logger = require('../../utils/logger');
 const { UUIDgenerate } = require('../../utils/utils');
 const Config = require('./router.config');

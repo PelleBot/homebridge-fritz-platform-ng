@@ -2,7 +2,7 @@
 
 const fs = require('fs-extra');
 const moment = require('moment');
-const { requestLUA, requestXml } = require('@seydx/fritzbox/lib/request');
+const { requestLUA, requestXml } = require('../../lib/fritzbox/request');
 const logger = require('../../utils/logger');
 const Telegram = require('../../lib/telegram');
 

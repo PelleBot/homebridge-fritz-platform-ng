@@ -19,7 +19,45 @@
 
 const { HomebridgePluginUiServer } = require('@homebridge/plugin-ui-utils');
 const { version } = require('../package.json');
-const Fritzbox = require('@seydx/fritzbox');
+const net = require('net');
+const Fritzbox = require('../src/lib/fritzbox/fritzbox');
+
+// @seydx/fritzbox (got) sets no request timeout. If the FritzBox accepts a
+// connection but never answers (typically the TR-064 HTTPS port when ssl is on),
+// the wizard would wait forever (issue #1). All FritzBox calls from the wizard
+// therefore run against a deadline; on timeout we probe the ports involved to
+// tell the user which one does not respond.
+const TEST_TIMEOUT_MS = 15000;
+const DISCOVER_TIMEOUT_MS = 30000;
+const PORT_PROBE_TIMEOUT_MS = 3000;
+const TR064_SSL_PORT = 49443;
+const AHA_HTTP_PORT = 80;
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(`Keine Antwort der FritzBox innerhalb von ${Math.round(ms / 1000)} Sekunden.`);
+      err.code = 'WIZARD_TIMEOUT';
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+// Resolves to 'open', 'refused', 'timeout' or the socket error code.
+function probePort(host, port, ms = PORT_PROBE_TIMEOUT_MS) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host, port });
+    const finish = (result) => {
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(ms, () => finish('timeout'));
+    socket.once('connect', () => finish('open'));
+    socket.once('error', (err) => finish(err.code === 'ECONNREFUSED' ? 'refused' : err.code || 'error'));
+  });
+}
 
 class UiServer extends HomebridgePluginUiServer {
   constructor() {
@@ -61,7 +99,7 @@ class UiServer extends HomebridgePluginUiServer {
     const fb = this.makeFritzbox(payload);
 
     try {
-      const list = await fb.getSmarthomeDevices();
+      const list = await withTimeout(fb.getSmarthomeDevices(), TEST_TIMEOUT_MS);
       const devices = (list && list.devices) || [];
 
       return {
@@ -71,8 +109,55 @@ class UiServer extends HomebridgePluginUiServer {
         productNames: [...new Set(devices.map((d) => d.productname).filter(Boolean))],
       };
     } catch (err) {
+      if (err && err.code === 'WIZARD_TIMEOUT') {
+        return this.formatTimeoutError(err, payload);
+      }
       return this.formatConnectionError(err);
     }
+  }
+
+  /**
+   * After a timeout: check which of the ports the library uses answers, so the
+   * hint names the likely cause instead of leaving the user guessing.
+   */
+  async formatTimeoutError(err, payload) {
+    const host = payload.host;
+    const port = parseInt(payload.port, 10) > 0 ? parseInt(payload.port, 10) : 49000;
+    const ssl = payload.ssl !== false;
+
+    const targets = [{ port, label: 'TR-064' }];
+    if (ssl) targets.push({ port: TR064_SSL_PORT, label: 'TR-064 HTTPS' });
+    targets.push({ port: AHA_HTTP_PORT, label: 'Smart-Home-Schnittstelle (HTTP)' });
+
+    const results = await Promise.all(targets.map(async (t) => ({ ...t, state: await probePort(host, t.port) })));
+    const summary = results.map((r) => `${r.label} Port ${r.port}: ${r.state === 'open' ? 'erreichbar' : r.state}`).join(', ');
+
+    const blocked = results.find((r) => r.state !== 'open');
+    let hint;
+    if (blocked && blocked.port === port) {
+      hint =
+        ' Tipp: Die FritzBox ist unter dieser Adresse auf dem TR-064-Port nicht erreichbar. Host-Adresse prüfen und in der ' +
+        'FritzBox unter Heimnetz → Netzwerk → Netzwerkeinstellungen „Zugriff für Anwendungen zulassen“ aktivieren.';
+    } else if (blocked && blocked.port === TR064_SSL_PORT) {
+      hint =
+        ' Tipp: Der HTTPS-Port für TR-064 antwortet nicht. Option „SSL“ ausschalten und erneut testen ' +
+        '(im Heimnetz unkritisch) oder prüfen, ob eine Firewall Port 49443 sperrt.';
+    } else if (blocked && blocked.port === AHA_HTTP_PORT) {
+      hint = ' Tipp: Die Smart-Home-Schnittstelle der FritzBox (Port 80) antwortet nicht. Firewall zwischen Homebridge und FritzBox prüfen.';
+    } else if (ssl) {
+      hint =
+        ' Tipp: Alle Ports sind erreichbar, die FritzBox antwortet aber nicht. Option „SSL“ ausschalten und erneut testen; ' +
+        'hilft das nicht, Benutzer und Berechtigung „Smart Home“ in der FritzBox prüfen.';
+    } else {
+      hint = ' Tipp: Alle Ports sind erreichbar, die FritzBox antwortet aber nicht. Benutzer und Berechtigung „Smart Home“ prüfen.';
+    }
+
+    return {
+      ok: false,
+      error: `${err.message} (${summary})`,
+      code: err.code,
+      hint,
+    };
   }
 
   formatConnectionError(err) {
@@ -203,7 +288,7 @@ class UiServer extends HomebridgePluginUiServer {
     const fb = this.makeFritzbox(payload);
 
     try {
-      const list = await fb.getSmarthomeDevices();
+      const list = await withTimeout(fb.getSmarthomeDevices(), DISCOVER_TIMEOUT_MS);
       const rawDevices = (list && list.devices) || [];
 
       const devices = rawDevices.map((d) => {

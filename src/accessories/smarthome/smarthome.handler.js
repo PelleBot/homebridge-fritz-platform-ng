@@ -1,6 +1,6 @@
 'use strict';
 
-const { requestAHA } = require('@seydx/fritzbox/lib/request');
+const { requestAHA } = require('../../lib/fritzbox/request');
 const moment = require('moment');
 const logger = require('../../utils/logger');
 const { colortemp2api, getValidColor } = require('./smarthome.utils');
