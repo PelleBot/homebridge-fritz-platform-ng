@@ -7,7 +7,8 @@
     C. Device discovery — Step 2 with auto-detected accType per device
     D. Energy 250 OBIS-Reader auto-setup — Step 3 (4 tiles per reader)
     E. Router-Switches — Step 4 (master.options pre-hydrated from config)
-    F. Save — Step 5 (writes config.json; restart via the Config UI X toolbar)
+    F. Save — Step 5 (hands the config to Config UI X; its Save button writes
+       config.json and offers the child-bridge restart, v1.3.4)
     G. Edit-Mode — re-run preserves user edits (tile names, accType, energy
        display type, router-switches) by hydrating wizardState from the
        existing config.json. Step 5 shows a diff of pending changes.
@@ -350,9 +351,11 @@
     <!-- ============ STEP 5 — Save + Apply ============ -->
     <div class="step-pane" id="step-5">
       <div class="alert alert-info">
-        <strong>Schritt 5 — Konfiguration speichern</strong><br>
-        Prüfe die Zusammenfassung und speichere. Wirksam wird die Änderung nach einem
-        Neustart von Homebridge.
+        <strong>Schritt 5 — Prüfen und speichern</strong><br>
+        Prüfe die Zusammenfassung. Gespeichert wird unten rechts im Fenster mit
+        <strong>Save</strong> (deutsche Oberfläche: <strong>Speichern</strong>). Homebridge
+        bietet danach an, die FritzBox-Child-Bridge neu zu starten; erst dann wird die
+        Änderung wirksam.
       </div>
 
       <div id="saveSummary" style="margin-top: 1rem;"></div>
@@ -369,7 +372,6 @@
 
       <div class="wizard-nav">
         <button id="backTo4" class="btn btn-outline-secondary">← Zurück zu Schritt 4</button>
-        <button id="saveBtn" class="btn btn-success btn-lg">💾 Konfiguration speichern</button>
       </div>
     </div>
   </div>
@@ -390,13 +392,19 @@
       presenceOptions: null,      // v1.3.0: { anyone, guest, accType }
     };
 
-    // v1.3.1: the wizard saves via its own button. Grey out the Config UI X
-    // "Save" button so there is exactly one way to save.
-    try {
-      homebridge.disableSaveButton();
-    } catch (e) {
-      // older Config UI X without this API: leave the button as it is
+    // v1.3.4: Config UI X's own "Save" button is the only way to save. It is
+    // enabled in step 5, after the wizard has handed over the new config, and
+    // greyed out in steps 1–4. Saving through it lets Config UI X offer the
+    // restart of the affected child bridge (a plugin UI cannot restart anything).
+    function setUiSaveButton(enabled) {
+      try {
+        if (enabled) homebridge.enableSaveButton();
+        else homebridge.disableSaveButton();
+      } catch (e) {
+        // older Config UI X without this API: leave the button as it is
+      }
     }
+    setUiSaveButton(false);
 
     // ============ DOM References ============
     const stepPanes = {
@@ -425,6 +433,7 @@
 
     // ============ Step navigation ============
     function showStep(n) {
+      if (n !== 5) setUiSaveButton(false);
       Object.entries(stepPanes).forEach(([k, el]) => {
         el.classList.toggle('active', k === String(n));
       });
@@ -726,6 +735,7 @@
       collectPresence();
       showStep(5);
       renderSavePreview();
+      stageConfig();
     });
     backTo4.addEventListener('click', () => showStep(4));
 
@@ -1057,47 +1067,32 @@
       diffEl.innerHTML = renderConfigDiff(config, wizardState.existingConfig);
     }
 
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.addEventListener('click', async () => {
+    // Hand the new config to Config UI X (in memory only) and enable its Save
+    // button. Nothing is written until the user clicks Save; Config UI X then
+    // saves, closes the window and offers to restart the FritzBox child bridge.
+    async function stageConfig() {
       const saveResult = document.getElementById('saveResult');
       saveResult.innerHTML = '';
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Speichere…';
-
       try {
-        const newConfig = buildPluginConfig();
-
-        // homebridge.updatePluginConfig expects an array of platform config objects
-        // (one plugin can register multiple platform instances, but ours is singular)
-        await homebridge.updatePluginConfig([newConfig]);
-
-        // Persist the in-memory config to disk. In standalone mode (running
-        // homebridge-config-ui-x standalone.js without hb-service), this can
-        // sometimes hang because the websocket ACK isn't sent. Race with a
-        // 3-second timeout so the UI doesn't freeze forever — the file is
-        // already written synchronously by the time savePluginConfig returns.
-        await Promise.race([
-          homebridge.savePluginConfig(),
-          new Promise((resolve) => setTimeout(resolve, 3000)),
-        ]);
-
+        await homebridge.updatePluginConfig([buildPluginConfig()]);
+        setUiSaveButton(true);
         saveResult.innerHTML = `
           <div class="alert alert-success">
-            <strong>✓ Gespeichert.</strong>
-            Zum Aktivieren Homebridge neu starten: in Config UI X oben rechts über das Neustart-Symbol.
+            <strong>Bereit zum Speichern.</strong>
+            Klicke unten rechts auf <strong>Save</strong> bzw. <strong>Speichern</strong>.
+            Homebridge schließt dann dieses Fenster und bietet den Neustart der
+            FritzBox-Child-Bridge an.
           </div>
         `;
       } catch (err) {
+        setUiSaveButton(false);
         saveResult.innerHTML = `
           <div class="alert alert-danger">
-            <strong>Fehler beim Speichern:</strong> ${escapeHtml(err.message || String(err))}
+            <strong>Konfiguration konnte nicht übergeben werden:</strong> ${escapeHtml(err.message || String(err))}
           </div>
         `;
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '💾 Konfiguration speichern';
       }
-    });
+    }
 
     // ============ Step 4 — Router Switches ============
     // Pre-fill checkboxes from existing master.options (if user is editing
