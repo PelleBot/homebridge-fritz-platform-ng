@@ -1,8 +1,8 @@
 {
   "name": "@pellebot/homebridge-fritz-platform-hb2",
   "displayName": "Homebridge FRITZ!Box Platform (HB2)",
-  "version": "1.3.4",
-  "description": "Homebridge 2.0 plugin for AVM FRITZ!DECT devices (thermostats, lamps, sensors, OBIS smart-meter readers) FRITZ!Box router switches (Guest WLAN, WPS) and optional WLAN presence sensors. Node 22 / 24 / 26 ready.",
+  "version": "1.4.0",
+  "description": "Homebridge 2.0 plugin for AVM FRITZ!DECT devices (thermostats, lamps, sensors, OBIS smart-meter readers), FRITZ!Box templates and scenarios as switches, FRITZ!Box router switches (Guest WLAN, WPS) and optional WLAN presence sensors. Node 22 / 24 / 26 ready.",
   "icon": "https://raw.githubusercontent.com/PelleBot/homebridge-fritz-platform-ng/main/branding/Icon.png",
   "type": "module",
   "main": "index.mjs",
@@ -63,7 +63,8 @@
     "thermostat",
     "fritz-dect",
     "homebridge-2",
-    "presence"
+    "presence",
+    "templates"
   ],
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || ^26.0.0",

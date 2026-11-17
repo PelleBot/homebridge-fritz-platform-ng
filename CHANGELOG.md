@@ -2,7 +2,31 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.3.4 — unveröffentlicht (Wizard: Speichern über Homebridge, Neustart-Angebot)
+# v1.4.0 — unveröffentlicht (Vorlagen und Szenarien als HomeKit-Schalter)
+
+**FRITZ!Box-Vorlagen und -Szenarien lassen sich in HomeKit per Knopfdruck, Siri oder Automation auslösen.** Opt-in über den neuen Block `templates`; ohne ihn ändert sich nichts.
+
+## Neu
+
+- **Taster je Vorlage oder Szenario** (`templates.include` mit Name oder Identifier, oder `templates.exposeAll`): Einschalten ruft `applytemplate` auf, nach etwa einer Sekunde springt der Schalter zurück auf Aus. Die Accessory-UUID kommt aus dem Identifier der Vorlage; Umbenennen in der FRITZ!Box ändert nichts an der Zuordnung in HomeKit. Anzeigename per `templates.names` überschreibbar.
+- **Modus-Schalter** (`templates.modeSwitch`, z. B. „Urlaubsmodus“): Ein = Vorlage „Urlaub“, Aus = Szenario „Zuhause“. Die FRITZ!Box meldet nicht, welche Vorlage zuletzt aktiv war; der Zustand liegt deshalb in `persist/homebridge-fritz-platform-hb2.templates.json` und übersteht Neustarts. Schlägt das Anwenden fehl, bleibt der Schalter im alten Zustand und HomeKit erhält `SERVICE_COMMUNICATION_FAILURE`.
+- **Szenarien:** Auslösen mit `applytemplate` auf den Szenario-Identifier. Lehnt die FRITZ!Box das ab (HTTP 400 oder `inval`), werden die Untervorlagen nacheinander angewendet (Warnung im Log).
+- **Abgleich:** Vorlagenliste beim Start und alle `refreshMinutes` (Standard 60) neu lesen. Nicht vorhandene Einträge → Warnung; gelöschte Vorlagen → Schalter wird entfernt. Ist die FRITZ!Box nicht erreichbar, bleiben die Schalter und der Abgleich wird mit wachsendem Abstand wiederholt.
+- **Session-ID:** wiederverwendet; bei HTTP 403 einmal neu anmelden und die Anfrage einmal wiederholen, danach Fehlermeldung mit Hinweis auf die Berechtigung „Smart Home“. Zeitlimit 9 s je Auslösung (unter dem HomeKit-Zeitlimit).
+
+## Sonstiges
+
+- `requestAHA` gibt die Session-ID in Debug-Ausgaben (`DEBUG=fritzbox:*`) nur noch maskiert aus.
+- Entfernen eines Accessorys aus der internen Liste per UUID statt per Anzeigename (vorher konnten gleichnamige Accessories mit entfernt werden).
+- CI: neuer Mocktest `ci/templates-mock-test.cjs`.
+
+## Geprüft
+
+- Mocktest (gemockte AHA-Antworten): XML mit Vorlage, Szenario mit `sub_templates`, leere Liste; SID-Wiederholung genau einmal, keine Schleife bei dauerhaftem 403; Szenario-Fallback; Taster setzt sich zurück; Modus-Schalter speichert, stellt nach Neustart wieder her und setzt bei Fehler zurück; fehlende Vorlage; verwaiste Schalter; keine Session-ID im Log.
+- Lesend gegen eine FRITZ!Box 6690 Cable (FRITZ!OS 8): `gettemplatelistinfos` mit 7 Einträgen (1 Szenario mit 5 Untervorlagen) korrekt gelesen und zugeordnet; Wiederholung nach ungültiger Session-ID funktioniert.
+- `applytemplate` ist am echten Gerät noch nicht ausgeführt (verändert sofort die Heizung).
+
+# v1.3.4 — 2026-11-16 (Wizard: Speichern über Homebridge, Neustart-Angebot)
 
 **Nach dem Speichern bietet Homebridge selbst den Neustart der FritzBox-Child-Bridge an.**
 
