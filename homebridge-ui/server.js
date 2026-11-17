@@ -11,6 +11,7 @@
  *   /ping              — server health check (returns plugin metadata)
  *   /test-connection   — verify TR-064 + AHA-API reachability of a FritzBox
  *   /discover-devices  — list smart-home devices with auto-detected accType
+ *   /discover-templates — list FRITZ!Box templates and scenarios (v1.4.1, read only)
  *
  * Later phases will add:
  *   /probe-energy-250  — group HAN-FUN OBIS sub-AINs into Energy 250 setup
@@ -21,6 +22,8 @@ const { HomebridgePluginUiServer } = require('@homebridge/plugin-ui-utils');
 const { version } = require('../package.json');
 const net = require('net');
 const Fritzbox = require('../src/lib/fritzbox/fritzbox');
+const { AhaTemplateClient } = require('../src/accessories/templates/templates.client');
+const { templatesForWizard, templateErrorText } = require('./templates-wizard');
 
 // @seydx/fritzbox (got) sets no request timeout. If the FritzBox accepts a
 // connection but never answers (typically the TR-064 HTTPS port when ssl is on),
@@ -66,6 +69,7 @@ class UiServer extends HomebridgePluginUiServer {
     this.onRequest('/ping', () => this.handlePing());
     this.onRequest('/test-connection', (payload) => this.handleTestConnection(payload));
     this.onRequest('/discover-devices', (payload) => this.handleDiscoverDevices(payload));
+    this.onRequest('/discover-templates', (payload) => this.handleDiscoverTemplates(payload));
 
     this.ready();
   }
@@ -310,6 +314,27 @@ class UiServer extends HomebridgePluginUiServer {
       };
     } catch (err) {
       return this.formatConnectionError(err);
+    }
+  }
+
+  // v1.4.1: read-only list of templates/scenarios for the wizard. Never applies anything.
+  async handleDiscoverTemplates(payload = {}) {
+    if (!payload.host || !payload.username || !payload.password) {
+      return { ok: false, error: 'Host, Username und Password sind Pflichtfelder.' };
+    }
+
+    const client = new AhaTemplateClient({ fritzbox: this.makeFritzbox(payload) });
+
+    try {
+      const list = await withTimeout(client.getTemplates(), TEST_TIMEOUT_MS);
+      const templates = templatesForWizard(list);
+      return {
+        ok: true,
+        message: `${templates.length} Vorlage(n)/Szenario(s) gefunden.`,
+        templates,
+      };
+    } catch (err) {
+      return { ok: false, error: templateErrorText(err) };
     }
   }
 }
