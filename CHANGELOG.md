@@ -2,7 +2,22 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.4.1 — unveröffentlicht (Wizard: Vorlagen und Szenarien)
+# v1.4.2 — unveröffentlicht (Konfigurationsschema nach JSON-Schema-Standard)
+
+**Das Konfigurationsschema erfüllt die Prüfung für die Homebridge-Verifizierung** (homebridge/plugins#1369).
+
+## Änderungen
+
+- `config.schema.json`: Pflichtfelder stehen jetzt als Liste `"required": [ … ]` am jeweiligen Objekt statt als `"required": true` an einzelnen Feldern (15 Stellen). Der Prüfbot der Verifizierung hatte das als ungültiges JSON Schema gemeldet.
+- Pflicht bleiben nur Felder, die immer nötig sind: Name bei Geräten, Smart-Home-Einträgen und Anwesenheit, Adresse bei Anwesenheit, Vorlage und Name bei den Anzeigenamen der Vorlagen.
+- Nicht mehr als Pflichtfeld markiert sind Felder, die nur je nach Gerät nötig sind (`host`, `master`, `connection`, `ain`, `accType`, `accTypeGroup`) oder einen Standardwert haben (`ssl`, `tr064`, Polling-Timer). Das Plugin prüft diese Fälle weiterhin selbst beim Start und meldet fehlende Angaben im Log.
+- Funktion und Konfiguration unverändert.
+
+## Geprüft
+
+- Schema mit ajv kompiliert, keine `required`-Booleans mehr; die laufende Konfiguration eines produktiven Systems (19 Geräte, Anwesenheit) ist gültig; eine Gruppe ohne `ain`/`accType` ist gültig; ein Gerät ohne Namen ist ungültig.
+
+# v1.4.1 — 2026-11-17 (Wizard: Vorlagen und Szenarien)
 
 **Vorlagen und Szenarien lassen sich jetzt im Setup-Wizard einrichten.** In 1.4.0 ging das nur über die JSON-Konfiguration, weil das Plugin in der Homebridge-Oberfläche nur den Wizard zeigt.
 
