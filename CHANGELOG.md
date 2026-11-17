@@ -2,7 +2,29 @@
 
 > **Hinweis zum Format:** Releases ab `v1.0.0` werden unter dem npm-Paket `@pellebot/homebridge-fritz-platform-hb2` veröffentlicht. Die `6.1.0-hb2patch.x` Pre-Releases sind Vorstufen unter dem alten Paketnamen `@pellebot/homebridge-fritz-platform` (deprecated). Die `registerPlatform`-Kennung bleibt durchgängig `homebridge-fritz-platform`, sodass cached Accessories über den Rename hinweg matchen — kein Re-Pairing nötig.
 
-# v1.4.0 — unveröffentlicht (Vorlagen und Szenarien als HomeKit-Schalter)
+# v1.4.1 — unveröffentlicht (Wizard: Vorlagen und Szenarien)
+
+**Vorlagen und Szenarien lassen sich jetzt im Setup-Wizard einrichten.** In 1.4.0 ging das nur über die JSON-Konfiguration, weil das Plugin in der Homebridge-Oberfläche nur den Wizard zeigt.
+
+## Wizard
+
+- Schritt 4 hat den neuen Abschnitt **„Vorlagen und Szenarien (optional)“**. Beim Aufklappen liest der Wizard die Vorlagen und Szenarien aus der FRITZ!Box (neuer Server-Endpunkt `/discover-templates`, nur lesend) und zeigt sie als Liste mit Häkchen, Typ (Vorlage/Szenario) und optionalem Namen für HomeKit. Automatisch erzeugte Vorlagen vordefinierter Szenarien sind ausgeblendet.
+- Modus-Schalter mit Name und Auswahl der Vorlage für Ein und Aus (Vorschlag „Urlaub“/„Zuhause“, falls vorhanden).
+- Schritt 5 zeigt die Vorlagen in der Zusammenfassung und in der Liste der Änderungen.
+- Fehlt dem FritzBox-Benutzer die Berechtigung „Smart Home“, nennt der Wizard das ausdrücklich.
+
+## Behoben
+
+- **Der Wizard hat beim Speichern einen von Hand eingetragenen `templates`-Block entfernt**, weil er die Konfiguration komplett neu aufbaut. Der Block wird jetzt übernommen, wenn der Abschnitt im Wizard nicht geöffnet wird.
+- **Schritt 2: „Weiter“ war möglich, bevor die Geräteliste geladen war.** Dann baute Schritt 5 eine Konfiguration ohne Smart-Home-Geräte, und **Save** hätte alle Geräte entfernt (die Änderungsliste zeigte das zwar an, verhinderte es aber nicht). Jetzt ist „Weiter“ bis zum Laden gesperrt, und Schritt 5 gibt eine Konfiguration ohne Geräte nicht frei, wenn vorher Geräte konfiguriert waren.
+- README: Die Einrichtung über einen Abschnitt „Templates and scenarios“ der Homebridge-Oberfläche war falsch beschrieben (dieses Formular zeigt das Plugin nicht).
+
+## Geprüft
+
+- Mocktest ergänzt (Vorlagenliste für den Wizard, Fehlertexte, kein `applytemplate` beim Lesen); alle Tests bestanden.
+- Config UI X 5.30.1 auf dem M4 mit der echten FRITZ!Box: Schritt 1–5 durchlaufen; „Weiter“ in Schritt 2 während des Ladens gesperrt; 7 Vorlagen/Szenarien angezeigt; „Urlaub“, „Zuhause“ und Modus-Schalter gewählt → Schritt 5 zeigt genau eine Änderung („Vorlagen/Szenarien: aus → 2 Taster + Modus-Schalter“), 19 Geräte und 2 Anwesenheitssensoren bleiben. Nicht gespeichert; die installierten Dateien danach zurückgesetzt.
+
+# v1.4.0 — 2026-11-17 (Vorlagen und Szenarien als HomeKit-Schalter)
 
 **FRITZ!Box-Vorlagen und -Szenarien lassen sich in HomeKit per Knopfdruck, Siri oder Automation auslösen.** Opt-in über den neuen Block `templates`; ohne ihn ändert sich nichts.
 

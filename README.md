@@ -242,7 +242,11 @@ Bleibt ein Sensor dauerhaft auf „nicht erkannt“, obwohl das Gerät im WLAN i
 
 Macht Vorlagen und Szenarien aus der FRITZ!Box (*Smart Home → Automatisierung*) als Schalter in HomeKit verfügbar. Damit lassen sie sich per Knopfdruck, Siri oder HomeKit-Automation auslösen, z. B. „Urlaub“ (alle Heizkörper-Gruppen auf 16 °C) und „Zuhause“ (normale Zeitpläne wieder herstellen).
 
-Die Funktion ist **Opt-in**: Ohne `templates`-Block oder mit `"enabled": false` verhält sich das Plugin wie bisher. Einrichtung in der Homebridge-Oberfläche (Abschnitt „Templates and scenarios“) oder in der `config.json`:
+Die Funktion ist **Opt-in**: Ohne `templates`-Block oder mit `"enabled": false` verhält sich das Plugin wie bisher.
+
+**Einrichtung im Setup-Wizard (seit v1.4.1):** Plugin-Einstellungen öffnen, bis **Schritt 4** gehen und den Abschnitt **„Vorlagen und Szenarien (optional)“** aufklappen. Der Wizard liest die Vorlagen aus der FRITZ!Box (nur lesend, er wendet nichts an); dort die gewünschten anhaken und optional den Modus-Schalter einrichten. Gespeichert wird in Schritt 5 über **Save**. Ein von Hand eingetragener `templates`-Block bleibt beim erneuten Durchlaufen des Wizards erhalten.
+
+**Oder in der `config.json`** (Homebridge-Oberfläche → *JSON Config*), im Block mit `"platform": "FritzPlatform"`:
 
 ```json
 {

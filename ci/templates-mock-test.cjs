@@ -573,6 +573,35 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     console.log('✓ cached template switches are removed when the feature is off');
   }
 
+  // 10. wizard helpers (v1.4.1) ------------------------------------------------
+  {
+    const { templatesForWizard, templateErrorText } = require('../homebridge-ui/templates-wizard');
+    const list = await parseTemplateList(FULL);
+    const shown = templatesForWizard(list);
+    assert.deepStrictEqual(
+      shown.map((t) => `${t.isScenario ? 'S' : 'V'}:${t.name}`),
+      ['V:Urlaub', 'V:Zuhause Bäder', 'V:Zuhause Büros', 'S:Zuhause'],
+      'templates first (sorted), scenarios last, auto-created hidden'
+    );
+    assert.strictEqual(shown.find((t) => t.isScenario).subCount, 2);
+    assert.strictEqual(shown.find((t) => t.name === 'Urlaub').deviceCount, 2);
+    assert.deepStrictEqual(templatesForWizard([]), []);
+    assert.ok(/Smart Home/.test(templateErrorText({ code: 403 })));
+    assert.ok(/rechtzeitig/.test(templateErrorText({ code: 'TEMPLATE_TIMEOUT' })));
+
+    // the wizard server answers /discover-templates through the same client
+    const box = makeBox();
+    const client = new AhaTemplateClient({ fritzbox: box.fritzbox, request: box.request });
+    const viaClient = templatesForWizard(await client.getTemplates());
+    assert.strictEqual(viaClient.length, 4);
+    assert.strictEqual(
+      box.calls.filter((c) => c.switchcmd === 'applytemplate').length,
+      0,
+      'reading for the wizard never applies a template'
+    );
+    console.log('✓ wizard: template list for step 4, error texts, read only');
+  }
+
   // 9. no SID in the log --------------------------------------------------------
   {
     assert.ok(

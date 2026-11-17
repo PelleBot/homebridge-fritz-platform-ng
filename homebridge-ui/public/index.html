@@ -342,6 +342,42 @@
         </div>
       </details>
 
+      <!-- v1.4.1: optional FRITZ!Box templates and scenarios as HomeKit switches -->
+      <details id="templatesDetails" style="margin-top: 1rem;">
+        <summary style="cursor: pointer;"><strong>Vorlagen und Szenarien (optional)</strong> — FRITZ!Box-Vorlagen wie „Urlaub“ oder „Zuhause“ als Schalter in HomeKit</summary>
+        <div style="margin-top: 0.5rem; padding: 0.5rem; border-left: 3px solid #339DE0;">
+          <p style="font-size: 0.9rem;">
+            Vorlagen und Szenarien legst du in der FRITZ!Box unter <em>Smart Home → Automatisierung</em> an.
+            Jede hier markierte Vorlage erscheint in HomeKit als <strong>Taster</strong>: Einschalten wendet
+            sie an, nach etwa einer Sekunde springt der Schalter zurück auf Aus.
+            Der <strong>Modus-Schalter</strong> ist ein Schalter mit Zustand: Ein wendet die eine Vorlage an,
+            Aus die andere (z. B. „Urlaub“ / „Zuhause“).
+            <br><strong>Achtung:</strong> Eine Vorlage verändert sofort die Heizung und überschreibt auch
+            von Hand verstellte Regler. Dieser Assistent liest die Liste nur, er wendet nichts an.
+          </p>
+          <div id="templatesStatus" style="font-size: 0.9rem; margin-bottom: 0.5rem;"></div>
+          <button id="templatesLoad" type="button" class="btn btn-sm btn-outline-primary">Vorlagen aus der FritzBox laden</button>
+          <div id="templatesList" style="margin-top: 0.75rem;"></div>
+          <div id="templatesMode" style="margin-top: 0.75rem; display: none;">
+            <div class="form-check">
+              <input type="checkbox" id="tplModeEnabled" class="form-check-input">
+              <label class="form-check-label" for="tplModeEnabled"><strong>Modus-Schalter</strong> (Schalter mit Zustand)</label>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-top:0.25rem;">
+              <input type="text" id="tplModeName" class="form-control form-control-sm" style="max-width:180px;" placeholder="Urlaubsmodus">
+              <label style="font-size:0.85rem;">Ein =</label>
+              <select id="tplModeOn" class="form-select form-select-sm" style="max-width:200px;"></select>
+              <label style="font-size:0.85rem;">Aus =</label>
+              <select id="tplModeOff" class="form-select form-select-sm" style="max-width:200px;"></select>
+            </div>
+            <div style="font-size:0.8rem; color: var(--bs-secondary, #6c757d); margin-top:0.25rem;">
+              Die FritzBox meldet nicht, welche Vorlage zuletzt aktiv war. Das Plugin merkt sich deshalb selbst,
+              ob der Modus-Schalter Ein oder Aus steht.
+            </div>
+          </div>
+        </div>
+      </details>
+
       <div class="wizard-nav">
         <button id="backTo3" class="btn btn-outline-secondary">← Zurück zu Schritt 3</button>
         <button id="goTo5" class="btn btn-primary">Weiter zu Schritt 5 →</button>
@@ -390,6 +426,7 @@
       existingConfig: null,       // Phase G: { master, smarthome[], presence[], presenceOptions } from current config.json (null = first run)
       presence: null,             // v1.3.0: [{ active, name, address, accType, onDelay?, offDelay }] (null = not touched yet)
       presenceOptions: null,      // v1.3.0: { anyone, guest, accType }
+      templates: null,            // v1.4.1: templates block built in step 4 (null = not touched, keep existing)
     };
 
     // v1.3.4: Config UI X's own "Save" button is the only way to save. It is
@@ -465,7 +502,9 @@
         // v1.3.0: keep presence entries so a wizard re-run does not drop them
         const presence = Array.isArray(fritz.presence) ? fritz.presence : [];
         const presenceOptions = (fritz.options && fritz.options.presence) || null;
-        return { master, smarthome, presence, presenceOptions };
+        // v1.4.1: keep the templates block so a wizard re-run does not drop it
+        const templates = fritz.templates && typeof fritz.templates === 'object' ? fritz.templates : null;
+        return { master, smarthome, presence, presenceOptions, templates };
       } catch (err) {
         return null;
       }
@@ -565,6 +604,9 @@
 
     // ============ Step 2 — Device Discovery ============
     async function loadDevices() {
+      // v1.4.1: no "next" before the device list is there — otherwise step 5
+      // would build a config without devices and remove all of them.
+      goTo3.disabled = true;
       deviceList.innerHTML =
         '<div class="text-center text-muted" style="padding: 2rem;">' +
         '<span class="spinner-border spinner-border-sm"></span> Frage FritzBox-Geräteliste ab…' +
@@ -581,6 +623,7 @@
         }
 
         wizardState.discoveredDevices = response.devices || [];
+        goTo3.disabled = false;
 
         if (wizardState.discoveredDevices.length === 0) {
           deviceList.innerHTML =
@@ -726,6 +769,7 @@
       showStep(4);
       hydrateRouterSwitches();
       hydratePresence();
+      hydrateTemplates();
     });
     backTo3.addEventListener('click', () => showStep(3));
 
@@ -733,6 +777,7 @@
     const backTo4 = document.getElementById('backTo4');
     goTo5.addEventListener('click', () => {
       collectPresence();
+      collectTemplates();
       showStep(5);
       renderSavePreview();
       stageConfig();
@@ -803,6 +848,164 @@
         guest: document.getElementById('presenceGuest').checked,
         accType: document.getElementById('presenceAccType').value,
       };
+    }
+
+    // ============ Step 4c — Templates and scenarios (optional, v1.4.1) ============
+    const templatesDetails = document.getElementById('templatesDetails');
+    const templatesList = document.getElementById('templatesList');
+    const templatesStatus = document.getElementById('templatesStatus');
+    const templatesMode = document.getElementById('templatesMode');
+    let fritzTemplates = null; // [{ identifier, name, isScenario, subCount, deviceCount }] once loaded
+
+    // existing entry (name or identifier, as written by hand or by the wizard) → template
+    function findTemplate(ref) {
+      if (!ref || !fritzTemplates) return null;
+      const r = String(ref);
+      return (
+        fritzTemplates.find((t) => t.identifier === r) ||
+        fritzTemplates.find((t) => t.name === r) ||
+        fritzTemplates.find((t) => t.name.toLowerCase() === r.toLowerCase()) ||
+        null
+      );
+    }
+
+    function existingTemplatesConfig() {
+      return (wizardState.existingConfig && wizardState.existingConfig.templates) || null;
+    }
+
+    function renderTemplates() {
+      const existing = existingTemplatesConfig() || {};
+      const included = new Set((existing.include || []).map((ref) => (findTemplate(ref) || {}).identifier).filter(Boolean));
+      const names = {};
+      (existing.names || []).forEach((n) => {
+        const t = findTemplate(n && n.template);
+        if (t && n.name) names[t.identifier] = n.name;
+      });
+
+      if (!fritzTemplates.length) {
+        templatesList.innerHTML = '<div class="alert alert-secondary" style="font-size:0.9rem;">In der FritzBox sind keine Vorlagen oder Szenarien angelegt.</div>';
+        templatesMode.style.display = 'none';
+        return;
+      }
+
+      templatesList.innerHTML = fritzTemplates
+        .map((t) => {
+          const id = 'tpl-' + t.identifier.replace(/[^A-Za-z0-9_-]/g, '_');
+          const kind = t.isScenario
+            ? `<span class="badge bg-info text-dark">Szenario · ${t.subCount} Vorlagen</span>`
+            : `<span class="badge bg-secondary">Vorlage · ${t.deviceCount} Gerät(e)/Gruppe(n)</span>`;
+          return `
+            <div class="device-card tpl-row" data-identifier="${escapeHtml(t.identifier)}" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom:0.5rem;">
+              <input type="checkbox" class="form-check-input tpl-include" id="${id}" ${included.has(t.identifier) ? 'checked' : ''}>
+              <label for="${id}" style="min-width:180px;"><strong>${escapeHtml(t.name)}</strong></label>
+              ${kind}
+              <input type="text" class="form-control form-control-sm tpl-name" style="max-width:200px;" placeholder="Name in HomeKit (optional)" value="${escapeHtml(names[t.identifier] || '')}">
+            </div>`;
+        })
+        .join('');
+
+      // mode switch
+      const mode = existing.modeSwitch || {};
+      const options = fritzTemplates
+        .map((t) => `<option value="${escapeHtml(t.identifier)}">${escapeHtml(t.name)}${t.isScenario ? ' (Szenario)' : ''}</option>`)
+        .join('');
+      const onSel = document.getElementById('tplModeOn');
+      const offSel = document.getElementById('tplModeOff');
+      onSel.innerHTML = options;
+      offSel.innerHTML = options;
+      const pick = (sel, ref, fallbackName) => {
+        const t = findTemplate(ref) || findTemplate(fallbackName);
+        if (t) sel.value = t.identifier;
+      };
+      pick(onSel, mode.onTemplate, 'Urlaub');
+      pick(offSel, mode.offTemplate, 'Zuhause');
+      document.getElementById('tplModeEnabled').checked = mode.enabled === true;
+      document.getElementById('tplModeName').value = mode.name || '';
+      templatesMode.style.display = '';
+    }
+
+    async function loadTemplates() {
+      if (!wizardState.connection) {
+        templatesStatus.innerHTML = '<span class="text-danger">Erst in Schritt 1 die Verbindung testen.</span>';
+        return;
+      }
+      const btn = document.getElementById('templatesLoad');
+      btn.disabled = true;
+      templatesStatus.textContent = 'Lese Vorlagen aus der FritzBox …';
+      try {
+        const response = await homebridge.request('/discover-templates', wizardState.connection);
+        if (!response || !response.ok) {
+          templatesStatus.innerHTML = `<span class="text-danger">${escapeHtml((response && response.error) || 'Fehler beim Lesen der Vorlagen.')}</span>`;
+          return;
+        }
+        fritzTemplates = response.templates || [];
+        templatesStatus.textContent = response.message || '';
+        renderTemplates();
+        templatesList.dataset.loaded = '1';
+      } catch (err) {
+        templatesStatus.innerHTML = `<span class="text-danger">${escapeHtml(err.message || String(err))}</span>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function hydrateTemplates() {
+      if (templatesDetails.dataset.hydrated) return; // keep user edits when navigating back
+      templatesDetails.dataset.hydrated = '1';
+      const existing = existingTemplatesConfig();
+      if (existing && existing.enabled) {
+        templatesDetails.open = true;
+        loadTemplates();
+      }
+    }
+
+    document.getElementById('templatesLoad').addEventListener('click', () => loadTemplates());
+    templatesDetails.addEventListener('toggle', () => {
+      if (templatesDetails.open && !templatesList.dataset.loaded) loadTemplates();
+    });
+
+    function collectTemplates() {
+      // List never loaded (section not opened or FritzBox error): keep config.json as is.
+      if (!templatesList.dataset.loaded || !fritzTemplates) return;
+      const existing = existingTemplatesConfig() || {};
+
+      const include = [];
+      const names = [];
+      templatesList.querySelectorAll('.tpl-row').forEach((row) => {
+        const identifier = row.dataset.identifier;
+        const t = fritzTemplates.find((x) => x.identifier === identifier);
+        if (!t || !row.querySelector('.tpl-include').checked) return;
+        include.push(t.name);
+        const custom = row.querySelector('.tpl-name').value.trim();
+        if (custom && custom !== t.name) names.push({ template: t.name, name: custom });
+      });
+
+      const modeEnabled = templatesMode.style.display !== 'none' && document.getElementById('tplModeEnabled').checked;
+      const nameOf = (sel) => {
+        const t = fritzTemplates.find((x) => x.identifier === sel.value);
+        return t ? t.name : '';
+      };
+
+      if (!include.length && !modeEnabled && !existing.enabled) {
+        // nothing selected and nothing configured before: write no templates block
+        wizardState.templates = Object.keys(existing).length ? { ...existing, enabled: false } : false;
+        return;
+      }
+
+      const block = {
+        enabled: include.length > 0 || modeEnabled,
+        include,
+      };
+      if (names.length) block.names = names;
+      if (existing.exposeAll) block.exposeAll = true;
+      block.modeSwitch = {
+        enabled: modeEnabled,
+        name: document.getElementById('tplModeName').value.trim() || 'Urlaubsmodus',
+        onTemplate: nameOf(document.getElementById('tplModeOn')) || 'Urlaub',
+        offTemplate: nameOf(document.getElementById('tplModeOff')) || 'Zuhause',
+      };
+      if (existing.refreshMinutes !== undefined) block.refreshMinutes = existing.refreshMinutes;
+      wizardState.templates = block;
     }
 
     // ============ Step 5 — Build + Save ============
@@ -931,6 +1134,12 @@
         config.options.presence = presenceOptions;
       }
 
+      // v1.4.1: templates. Wizard input if the list was loaded in step 4,
+      // otherwise carry over what is already in config.json (also when it was
+      // written by hand).
+      const templates = wizardState.templates !== null ? wizardState.templates : existing.templates || null;
+      if (templates) config.templates = templates;
+
       return config;
     }
 
@@ -1012,6 +1221,23 @@
         lines.push(`Anwesenheit: ${oldPresence.length} → ${newPresence.length} aktive(r) Sensor(en)`);
       }
 
+      // -- Templates (v1.4.1) --
+      const tplKey = (t) =>
+        t && t.enabled
+          ? JSON.stringify({
+              include: (t.include || []).slice().sort(),
+              names: t.names || [],
+              mode: t.modeSwitch && t.modeSwitch.enabled ? [t.modeSwitch.name, t.modeSwitch.onTemplate, t.modeSwitch.offTemplate] : null,
+            })
+          : 'off';
+      if (tplKey(existing.templates) !== tplKey(newConfig.templates)) {
+        const describe = (t) =>
+          t && t.enabled
+            ? `${(t.include || []).length} Taster${t.modeSwitch && t.modeSwitch.enabled ? ' + Modus-Schalter' : ''}`
+            : 'aus';
+        lines.push(`Vorlagen/Szenarien: ${describe(existing.templates)} → ${describe(newConfig.templates)}`);
+      }
+
       if (lines.length === 0) {
         return `
           <div class="alert alert-secondary">
@@ -1029,6 +1255,17 @@
           </ul>
         </div>
       `;
+    }
+
+    function templatesSummary(t) {
+      if (!t || !t.enabled) return '<strong>0</strong> Vorlagen/Szenarien als Schalter (optional)';
+      const parts = [`<strong>${(t.include || []).length}</strong> Vorlage(n)/Szenario(s) als Taster`];
+      if (t.modeSwitch && t.modeSwitch.enabled) {
+        parts.push(
+          `Modus-Schalter <em>${escapeHtml(t.modeSwitch.name)}</em> (Ein = ${escapeHtml(t.modeSwitch.onTemplate)}, Aus = ${escapeHtml(t.modeSwitch.offTemplate)})`
+        );
+      }
+      return parts.join(', ');
     }
 
     function renderSavePreview() {
@@ -1056,6 +1293,7 @@
             <li><strong>${nEnergy}</strong> Energy-Tile(s) für FRITZ!Smart Energy 250 OBIS-Reader</li>
             <li><strong>${nRouter}</strong> Router-Switch(es) als HomeKit-Tiles</li>
             <li><strong>${(config.presence || []).filter((p) => p.active).length}</strong> Anwesenheitssensor(en) (WLAN, optional)</li>
+            <li>${templatesSummary(config.templates)}</li>
           </ul>
         </div>
       `;
@@ -1073,8 +1311,21 @@
     async function stageConfig() {
       const saveResult = document.getElementById('saveResult');
       saveResult.innerHTML = '';
+      // v1.4.1: never hand over a config that silently drops every device.
+      const newConfig = buildPluginConfig();
+      const before = ((wizardState.existingConfig || {}).smarthome || []).length;
+      if (before > 0 && newConfig.smarthome.length === 0) {
+        setUiSaveButton(false);
+        saveResult.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Nicht gespeichert:</strong> Die neue Konfiguration enthält keine Smart-Home-Geräte,
+            die bisherige ${before}. Bitte zurück zu Schritt 2 und die Geräteliste vollständig laden lassen.
+          </div>
+        `;
+        return;
+      }
       try {
-        await homebridge.updatePluginConfig([buildPluginConfig()]);
+        await homebridge.updatePluginConfig([newConfig]);
         setUiSaveButton(true);
         saveResult.innerHTML = `
           <div class="alert alert-success">
