@@ -277,9 +277,11 @@ Die Funktion ist **Opt-in**: Ohne `templates`-Block oder mit `"enabled": false` 
 
 **Warum der Modus-Schalter seinen Zustand nur lokal kennt:** Die FRITZ!Box meldet nicht, welche Vorlage zuletzt angewendet wurde. Das Plugin merkt sich deshalb selbst, ob der Schalter Ein oder Aus steht (Datei `homebridge-fritz-platform-hb2.templates.json` im `persist`-Ordner von Homebridge), und stellt den Zustand nach einem Neustart wieder her. Wird eine Vorlage in der FRITZ!Box, der FRITZ!App oder per Taster angewendet, weiß der Modus-Schalter davon nichts und kann dann falsch stehen. Ein erneutes Umschalten wendet die Vorlage wieder an.
 
-**Szenarien:** Laut AVM-Dokumentation ist ein Szenario eine Vorlage mit Untervorlagen (`applymask` `<sub_templates/>`). Das Plugin löst es mit `applytemplate` auf den Identifier des Szenarios aus. Lehnt die FRITZ!Box das ab (HTTP 400 oder `inval`), wendet das Plugin die Untervorlagen des Szenarios nacheinander an und schreibt das als Warnung ins Log.
+**Szenarien:** Laut AVM-Dokumentation ist ein Szenario eine Vorlage mit Untervorlagen (`applymask` `<sub_templates/>`). Das Plugin löst es mit `applytemplate` auf den Identifier des Szenarios aus; mit FRITZ!OS 8 (FRITZ!Box 6690 Cable) ist das geprüft. Lehnt eine FRITZ!Box das ab (HTTP 400 oder `inval`), wendet das Plugin die Untervorlagen des Szenarios nacheinander an und schreibt das als Warnung ins Log.
 
 **Voraussetzungen:** FRITZ!OS ab 7.39 (Szenarien und Untervorlagen in der Schnittstelle). Der FRITZ!Box-Benutzer braucht die Berechtigung **Smart Home**. Fehlt sie, meldet das Log „access denied (403) after a fresh login“.
+
+**Hinweis:** Eine Vorlage überschreibt auch Solltemperaturen, die an einzelnen Reglern von Hand gesetzt wurden.
 
 **Fehlerfälle:** Einträge, die es in der FRITZ!Box nicht gibt, erzeugen eine Warnung im Log und werden übersprungen. Wird eine Vorlage in der FRITZ!Box gelöscht oder aus `include` entfernt, entfernt das Plugin den Schalter beim nächsten Abgleich. Ist die FRITZ!Box beim Abgleich nicht erreichbar, bleiben die Schalter bestehen.
 

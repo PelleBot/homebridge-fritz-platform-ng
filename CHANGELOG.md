@@ -10,7 +10,7 @@
 
 - **Taster je Vorlage oder Szenario** (`templates.include` mit Name oder Identifier, oder `templates.exposeAll`): Einschalten ruft `applytemplate` auf, nach etwa einer Sekunde springt der Schalter zurück auf Aus. Die Accessory-UUID kommt aus dem Identifier der Vorlage; Umbenennen in der FRITZ!Box ändert nichts an der Zuordnung in HomeKit. Anzeigename per `templates.names` überschreibbar.
 - **Modus-Schalter** (`templates.modeSwitch`, z. B. „Urlaubsmodus“): Ein = Vorlage „Urlaub“, Aus = Szenario „Zuhause“. Die FRITZ!Box meldet nicht, welche Vorlage zuletzt aktiv war; der Zustand liegt deshalb in `persist/homebridge-fritz-platform-hb2.templates.json` und übersteht Neustarts. Schlägt das Anwenden fehl, bleibt der Schalter im alten Zustand und HomeKit erhält `SERVICE_COMMUNICATION_FAILURE`.
-- **Szenarien:** Auslösen mit `applytemplate` auf den Szenario-Identifier. Lehnt die FRITZ!Box das ab (HTTP 400 oder `inval`), werden die Untervorlagen nacheinander angewendet (Warnung im Log).
+- **Szenarien:** Auslösen mit `applytemplate` auf den Szenario-Identifier (mit FRITZ!OS 8 bestätigt). Lehnt eine FRITZ!Box das ab (HTTP 400 oder `inval`), werden die Untervorlagen nacheinander angewendet (Warnung im Log).
 - **Abgleich:** Vorlagenliste beim Start und alle `refreshMinutes` (Standard 60) neu lesen. Nicht vorhandene Einträge → Warnung; gelöschte Vorlagen → Schalter wird entfernt. Ist die FRITZ!Box nicht erreichbar, bleiben die Schalter und der Abgleich wird mit wachsendem Abstand wiederholt.
 - **Session-ID:** wiederverwendet; bei HTTP 403 einmal neu anmelden und die Anfrage einmal wiederholen, danach Fehlermeldung mit Hinweis auf die Berechtigung „Smart Home“. Zeitlimit 9 s je Auslösung (unter dem HomeKit-Zeitlimit).
 
@@ -24,7 +24,8 @@
 
 - Mocktest (gemockte AHA-Antworten): XML mit Vorlage, Szenario mit `sub_templates`, leere Liste; SID-Wiederholung genau einmal, keine Schleife bei dauerhaftem 403; Szenario-Fallback; Taster setzt sich zurück; Modus-Schalter speichert, stellt nach Neustart wieder her und setzt bei Fehler zurück; fehlende Vorlage; verwaiste Schalter; keine Session-ID im Log.
 - Lesend gegen eine FRITZ!Box 6690 Cable (FRITZ!OS 8): `gettemplatelistinfos` mit 7 Einträgen (1 Szenario mit 5 Untervorlagen) korrekt gelesen und zugeordnet; Wiederholung nach ungültiger Session-ID funktioniert.
-- `applytemplate` ist am echten Gerät noch nicht ausgeführt (verändert sofort die Heizung).
+- Live am 17.11.2026 (Freigabe Andreas) über den Client des Plugins: Vorlage „Urlaub“ → nach 8 s alle 4 Gruppen und 12 Regler auf 16 °C; Szenario „Zuhause“ direkt mit `applytemplate` ausgelöst (kein Fallback nötig) → Zeitpläne wieder wie vorher. Antwort der FRITZ!Box bei Erfolg: die interne ID der Vorlage bzw. des Szenarios (z. B. `60100`), je ca. 130 ms.
+- Beobachtet: Eine Vorlage überschreibt auch von Hand gesetzte Solltemperaturen einzelner Regler.
 
 # v1.3.4 — 2026-11-16 (Wizard: Speichern über Homebridge, Neustart-Angebot)
 
