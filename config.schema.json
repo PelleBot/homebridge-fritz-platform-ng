@@ -53,13 +53,11 @@
             "name": {
               "title": "Name",
               "type": "string",
-              "required": true,
               "description": "Set the device name for display in the Home app."
             },
             "host": {
               "title": "Host",
               "type": "string",
-              "required": true,
               "description": "FritzBox IP Address.",
               "condition": {
                 "functionBody": "try { return model.devices[arrayIndices[0]].active } catch(e){ return false }"
@@ -88,14 +86,12 @@
               "title": "SSL",
               "type": "boolean",
               "description": "Required for extended requests.",
-              "required": true,
               "default": true
             },
             "tr064": {
               "title": "TR064",
               "type": "boolean",
               "description": "Enables TR064 endpoint on requests.",
-              "required": true,
               "default": true
             },
             "igd": {
@@ -138,7 +134,6 @@
               "title": "Master Device",
               "type": "boolean",
               "description": "Enables this device as master device. Only ONE device can be checked as master device!",
-              "required": true,
               "condition": {
                 "functionBody": "try { return model.devices[arrayIndices[0]].active } catch(e){ return false }"
               }
@@ -177,7 +172,6 @@
                   ]
                 }
               ],
-              "required": true,
               "condition": {
                 "functionBody": "try { return model.devices[arrayIndices[0]].active } catch(e){ return false }"
               }
@@ -409,7 +403,10 @@
                 }
               }
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         }
       },
       "smarthome": {
@@ -426,13 +423,11 @@
             "name": {
               "title": "Name",
               "type": "string",
-              "required": true,
               "description": "Set the device name for display in the Home app. If it is a grouped device, please enter the name of the group as defined in FritzBox."
             },
             "ain": {
               "title": "AIN",
               "type": "string",
-              "required": true,
               "placeholder": "01234567890",
               "description": "The AIN of the device.",
               "condition": {
@@ -598,7 +593,6 @@
                   ]
                 }
               ],
-              "required": true,
               "description": "The accessory type of the device(s) in the group."
             },
             "accType": {
@@ -681,7 +675,6 @@
                   ]
                 }
               ],
-              "required": true,
               "description": "The accessory type of the device. Use 'energy-temperature' or 'energy-light' for Fritz!Smart Energy 250 OBIS sub-AINs — both expose the value as a numeric sensor tile in Apple Home. 'energy-light' uses LightSensor (lx unit) which is a passive sensor and can be added to favorites; 'energy-temperature' uses TemperatureSensor (°C unit) which gets its own tile by default."
             },
             "obisChannel": {
@@ -707,7 +700,10 @@
               "default": "current_power",
               "description": "Which value to display in the TemperatureSensor. Configure one smarthome entry per (sub-AIN x channel) combination to get separate tiles, e.g. Aktueller Verbrauch (AIN-1, current_power), Gesamt Verbrauch (AIN-1, total_energy), Aktuelle Einspeisung (AIN-2, current_power), Gesamt Einspeisung (AIN-2, total_energy)."
             }
-          }
+          },
+          "required": [
+            "name"
+          ]
         }
       },
       "presence": {
@@ -727,15 +723,13 @@
               "title": "Name",
               "type": "string",
               "placeholder": "iPhone Andreas",
-              "description": "Name of the sensor in HomeKit. Must be unique and must not be \"Anyone\" or \"Guest\".",
-              "required": true
+              "description": "Name of the sensor in HomeKit. Must be unique and must not be \"Anyone\" or \"Guest\"."
             },
             "address": {
               "title": "IP or MAC address",
               "type": "string",
               "placeholder": "AA:BB:CC:DD:EE:FF",
-              "description": "IPv4 or MAC address of the device as shown in the FRITZ!Box (Heimnetz > Netzwerk). iPhones use a private Wi-Fi address: set it to \"Fixed\" for the home network, reconnect once, then take the MAC address from the FRITZ!Box device details (not the one shown on the phone) or, better, assign a permanent IPv4 address there and use that IP.",
-              "required": true
+              "description": "IPv4 or MAC address of the device as shown in the FRITZ!Box (Heimnetz > Netzwerk). iPhones use a private Wi-Fi address: set it to \"Fixed\" for the home network, reconnect once, then take the MAC address from the FRITZ!Box device details (not the one shown on the phone) or, better, assign a permanent IPv4 address there and use that IP."
             },
             "accType": {
               "title": "Accessory Type",
@@ -770,7 +764,11 @@
               "placeholder": 300,
               "description": "Seconds the device must be disconnected before the sensor switches to not detected. Default 300. Sleeping iPhones leave the Wi-Fi for short periods; values below 60 make the sensor flap."
             }
-          }
+          },
+          "required": [
+            "name",
+            "address"
+          ]
         }
       },
       "templates": {
@@ -809,15 +807,17 @@
               "properties": {
                 "template": {
                   "title": "Template (name or identifier)",
-                  "type": "string",
-                  "required": true
+                  "type": "string"
                 },
                 "name": {
                   "title": "Name in HomeKit",
-                  "type": "string",
-                  "required": true
+                  "type": "string"
                 }
-              }
+              },
+              "required": [
+                "template",
+                "name"
+              ]
             }
           },
           "modeSwitch": {
@@ -872,8 +872,7 @@
                 "type": "integer",
                 "placeholder": 15,
                 "default": 15,
-                "description": "Timer to refresh data on background.",
-                "required": true
+                "description": "Timer to refresh data on background."
               },
               "timerSmarthomeButtons": {
                 "title": "Polling Timer for Smarthome Buttons",
