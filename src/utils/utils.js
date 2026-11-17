@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs-extra');
 const logger = require('./logger');
+const TemplatesConfig = require('../accessories/templates/templates.config');
 
 exports.generateConfig = (config) => {
   return {
@@ -51,6 +52,7 @@ exports.generateConfig = (config) => {
         off: config.options && config.options.reboot && config.options.reboot.off ? config.options.reboot.off : false,
       },
     },
+    templates: TemplatesConfig(config.templates),
     telegram: {
       active: config.telegram && config.telegram.active ? true : false,
       token: config.telegram && config.telegram.token ? config.telegram.token : false,

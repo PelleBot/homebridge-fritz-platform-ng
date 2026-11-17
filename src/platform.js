@@ -51,6 +51,9 @@ const {
   PresenceSetup,
 } = require('./accessories/presence/presence');
 
+// FRITZ!Box templates and scenarios as HomeKit switches — opt-in since v1.4.0.
+const { TemplateManager } = require('./accessories/templates/templates');
+
 //Custom Types
 const CustomTypes = require('./types/custom.types');
 const EveTypes = require('./types/eve.types');
@@ -135,6 +138,24 @@ function FritzPlatform(log, config, api) {
     PresenceSetup(this.devices, this.config.presence, this.config.options.presence);
   }
 
+  if (this.config.templates.enabled) {
+    this.templateManager = new TemplateManager({
+      api: this.api,
+      Accessory,
+      getAccessories: () => this.accessories,
+      addAccessory: (accessory) => {
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.accessories.push(accessory);
+      },
+      removeAccessory: (accessory) => this.removeAccessory(accessory),
+      meshMaster: this.meshMaster,
+      config: this.config.templates,
+      version,
+    });
+
+    this.api.on('shutdown', () => this.templateManager.stop());
+  }
+
   this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
 }
 
@@ -162,6 +183,12 @@ FritzPlatform.prototype = {
       const device = this.devices.get(accessory.UUID);
 
       try {
+        // Template switches are reconciled by the TemplateManager against the
+        // FRITZ!Box template list. With the feature off they are removed here.
+        if (!device && this.templateManager && TemplateManager.isTemplateAccessory(accessory)) {
+          return;
+        }
+
         if (!device) {
           this.removeAccessory(accessory);
         }
@@ -180,6 +207,13 @@ FritzPlatform.prototype = {
         this.setupAccessory(accessory, device);
       }
     });
+
+    if (this.templateManager) {
+      this.templateManager.start().catch((err) => {
+        logger.warn('Templates: setup failed.');
+        logger.error(err);
+      });
+    }
   },
 
   setupAccessoryInformation: function (accessory, device) {
@@ -262,11 +296,10 @@ FritzPlatform.prototype = {
   },
 
   removeAccessory: function (accessory) {
-    logger.info('Removing accessory...', `${accessory.displayName} (${accessory.context.config.subtype})`);
+    const subtype = accessory.context && accessory.context.config ? accessory.context.config.subtype : 'unknown';
+    logger.info('Removing accessory...', `${accessory.displayName} (${subtype})`);
     this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
 
-    this.accessories = this.accessories.filter(
-      (cachedAccessory) => cachedAccessory.displayName !== accessory.displayName
-    );
+    this.accessories = this.accessories.filter((cachedAccessory) => cachedAccessory.UUID !== accessory.UUID);
   },
 };

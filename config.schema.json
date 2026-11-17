@@ -773,6 +773,92 @@
           }
         }
       },
+      "templates": {
+        "title": "Templates and scenarios (optional)",
+        "type": "object",
+        "description": "Opt-in since v1.4.0. Exposes FRITZ!Box templates (Vorlagen) and scenarios (Szenarien) from Smart Home > Automatisierung as HomeKit switches. Off unless enabled.",
+        "properties": {
+          "enabled": {
+            "title": "Enable templates and scenarios",
+            "type": "boolean",
+            "default": false,
+            "description": "Reads the template list from the FRITZ!Box. The FRITZ!Box user needs the \"Smart Home\" right."
+          },
+          "include": {
+            "title": "Templates/scenarios as buttons",
+            "type": "array",
+            "description": "Name or identifier of each template or scenario that should appear as a button. Turning the button on applies the template; it switches itself off after about one second.",
+            "items": {
+              "title": "Name or identifier",
+              "type": "string",
+              "placeholder": "Urlaub"
+            }
+          },
+          "exposeAll": {
+            "title": "Expose all templates and scenarios",
+            "type": "boolean",
+            "default": false,
+            "description": "Creates a button for every template and scenario of the FRITZ!Box (except templates created automatically for predefined scenarios)."
+          },
+          "names": {
+            "title": "Display names",
+            "type": "array",
+            "description": "Optional: different name in HomeKit. The assignment in HomeKit stays even if the template is renamed in the FRITZ!Box.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "template": {
+                  "title": "Template (name or identifier)",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "title": "Name in HomeKit",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          },
+          "modeSwitch": {
+            "title": "Mode switch",
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "title": "Enable mode switch",
+                "type": "boolean",
+                "default": false,
+                "description": "One switch with a state: On applies the 'On' template, Off applies the 'Off' template. The FRITZ!Box does not report which template was applied last, so the plugin remembers the state itself."
+              },
+              "name": {
+                "title": "Name",
+                "type": "string",
+                "default": "Urlaubsmodus",
+                "placeholder": "Urlaubsmodus"
+              },
+              "onTemplate": {
+                "title": "Template for On",
+                "type": "string",
+                "default": "Urlaub",
+                "placeholder": "Urlaub"
+              },
+              "offTemplate": {
+                "title": "Template or scenario for Off",
+                "type": "string",
+                "default": "Zuhause",
+                "placeholder": "Zuhause"
+              }
+            }
+          },
+          "refreshMinutes": {
+            "title": "Re-read template list (minutes)",
+            "type": "integer",
+            "default": 60,
+            "minimum": 0,
+            "description": "Interval for re-reading the template list (new, renamed or deleted templates). Minimum 5; 0 = only at start."
+          }
+        }
+      },
       "options": {
         "titel": "Options",
         "type": "object",
@@ -1030,6 +1116,51 @@
         "options.presence.anyone",
         "options.presence.guest",
         "options.presence.accType"
+      ]
+    },
+    {
+      "title": "Templates and scenarios (optional)",
+      "description": "Opt-in: FRITZ!Box templates and scenarios as HomeKit switches.",
+      "expandable": true,
+      "expanded": false,
+      "orderable": false,
+      "type": "section",
+      "items": [
+        "templates.enabled",
+        {
+          "key": "templates.include",
+          "type": "array",
+          "orderable": false,
+          "buttonText": "Add template",
+          "items": [
+            "templates.include[]"
+          ]
+        },
+        "templates.exposeAll",
+        {
+          "key": "templates.names",
+          "type": "array",
+          "orderable": false,
+          "buttonText": "Add display name",
+          "items": [
+            "templates.names[].template",
+            "templates.names[].name"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Mode switch",
+          "expandable": true,
+          "expanded": false,
+          "orderable": false,
+          "items": [
+            "templates.modeSwitch.enabled",
+            "templates.modeSwitch.name",
+            "templates.modeSwitch.onTemplate",
+            "templates.modeSwitch.offTemplate"
+          ]
+        },
+        "templates.refreshMinutes"
       ]
     },
     {

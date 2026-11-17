@@ -88,6 +88,9 @@ jobs:
       - name: Presence mock test (opt-in, offDelay, Anyone/Guest)
         run: node ci/presence-mock-test.cjs
 
+      - name: Templates mock test (templates, scenarios, mode switch, SID retry)
+        run: node ci/templates-mock-test.cjs
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

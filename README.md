@@ -28,6 +28,7 @@ Production: läuft produktiv beim Maintainer mit 12 DECT-Thermostaten, 1 DECT-La
 | FRITZ!Smart Energy 250 (OBIS-Reader, an ISKRA o.ä.) | `energy-temperature` oder `energy-light` | Aktuelle Leistung in W, kumulierte Energie in kWh — entweder als TemperatureSensor (°C-Tile, prominent im Raum) oder LightSensor (lx-Tile, passive Sensor-Anzeige, per Favorit ins Home-Tab holbar) |
 | FRITZ!Box Router (Master) | (via `options`) | Gast-WLAN-Switch, WPS-Switch, optional weitere Toggles |
 | Handy/Tablet im WLAN (optional, seit v1.3.0) | `presence[]` mit `occupancy` oder `motion` | Anwesenheit: Belegungs- oder Bewegungssensor je Gerät, optional „Anyone“ und „Guest“ |
+| FRITZ!Box-Vorlagen und -Szenarien (optional, seit v1.4.0) | `templates` | Taster je Vorlage/Szenario, optional Modus-Schalter (z. B. Urlaub/Zuhause) |
 
 ## Architektur
 
@@ -236,6 +237,53 @@ Bleibt ein Sensor dauerhaft auf „nicht erkannt“, obwohl das Gerät im WLAN i
 **Warum die Abmeldeverzögerung:** Schlafende iPhones trennen sich zum Stromsparen immer wieder kurz vom WLAN. Ohne Verzögerung springt der Sensor ständig zwischen „zu Hause“ und „weg“. `offDelay` unter 60 s erzeugt deshalb eine Warnung im Log; 300 s (5 min) ist ein guter Startwert, bei Fehlalarmen auf 600–900 s erhöhen. Die Erkennung ist so schnell wie das Polling (`options.polling.timer`, Standard 15 s) plus Verzögerung.
 
 **Grenzen:** Die FRITZ!Box meldet nur, ob das Gerät verbunden ist — nicht, ob es wirklich jemand bei sich trägt. Jeder Abfragezyklus fragt die Host-Liste der FRITZ!Box ab (zusätzliche Last bei vielen Geräten oder kurzem Polling-Intervall). Meldet das Log beim Abruf der Host-Liste einen Berechtigungsfehler, dem FRITZ!Box-Benutzer zusätzlich *FRITZ!Box-Einstellungen* geben (wie bei den Router-Switches). Beim Bewegungssensor zeigt die Eve-App keine Verlaufsgrafik (fakegato ist gestubbt).
+
+### Vorlagen und Szenarien (optional, seit v1.4.0)
+
+Macht Vorlagen und Szenarien aus der FRITZ!Box (*Smart Home → Automatisierung*) als Schalter in HomeKit verfügbar. Damit lassen sie sich per Knopfdruck, Siri oder HomeKit-Automation auslösen, z. B. „Urlaub“ (alle Heizkörper-Gruppen auf 16 °C) und „Zuhause“ (normale Zeitpläne wieder herstellen).
+
+Die Funktion ist **Opt-in**: Ohne `templates`-Block oder mit `"enabled": false` verhält sich das Plugin wie bisher. Einrichtung in der Homebridge-Oberfläche (Abschnitt „Templates and scenarios“) oder in der `config.json`:
+
+```json
+{
+  "templates": {
+    "enabled": true,
+    "include": ["Urlaub", "Zuhause"],
+    "exposeAll": false,
+    "names": [{ "template": "Urlaub", "name": "Heizung Urlaub" }],
+    "modeSwitch": {
+      "enabled": true,
+      "name": "Urlaubsmodus",
+      "onTemplate": "Urlaub",
+      "offTemplate": "Zuhause"
+    },
+    "refreshMinutes": 60
+  }
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `enabled` | schaltet die Funktion ein (Standard `false`) |
+| `include` | Vorlagen/Szenarien als **Taster**, je Eintrag Name oder Identifier (z. B. `tmp…`). Leer = keine |
+| `exposeAll` | alle Vorlagen und Szenarien als Taster (ohne die automatisch erzeugten Vorlagen der vordefinierten Szenarien) |
+| `names` | optional anderer Name in HomeKit je Vorlage |
+| `modeSwitch` | optionaler **Modus-Schalter** mit Zustand: Ein = `onTemplate`, Aus = `offTemplate` |
+| `refreshMinutes` | Vorlagenliste alle n Minuten neu lesen (Standard 60, mindestens 5; `0` = nur beim Start) |
+
+**Taster:** Einschalten wendet die Vorlage an (`applytemplate`), nach etwa einer Sekunde springt der Schalter von selbst auf Aus. Der Schalter hängt am Identifier der Vorlage: Wird die Vorlage in der FRITZ!Box umbenannt, bleiben Raum, Name und Automationen in HomeKit erhalten.
+
+**Modus-Schalter:** Ein wendet `onTemplate` an, Aus wendet `offTemplate` an. Schlägt das fehl, bleibt der Schalter im vorherigen Zustand und HomeKit meldet einen Fehler. Beim Start von Homebridge wird nichts angewendet.
+
+**Warum der Modus-Schalter seinen Zustand nur lokal kennt:** Die FRITZ!Box meldet nicht, welche Vorlage zuletzt angewendet wurde. Das Plugin merkt sich deshalb selbst, ob der Schalter Ein oder Aus steht (Datei `homebridge-fritz-platform-hb2.templates.json` im `persist`-Ordner von Homebridge), und stellt den Zustand nach einem Neustart wieder her. Wird eine Vorlage in der FRITZ!Box, der FRITZ!App oder per Taster angewendet, weiß der Modus-Schalter davon nichts und kann dann falsch stehen. Ein erneutes Umschalten wendet die Vorlage wieder an.
+
+**Szenarien:** Laut AVM-Dokumentation ist ein Szenario eine Vorlage mit Untervorlagen (`applymask` `<sub_templates/>`). Das Plugin löst es mit `applytemplate` auf den Identifier des Szenarios aus; mit FRITZ!OS 8 (FRITZ!Box 6690 Cable) ist das geprüft. Lehnt eine FRITZ!Box das ab (HTTP 400 oder `inval`), wendet das Plugin die Untervorlagen des Szenarios nacheinander an und schreibt das als Warnung ins Log.
+
+**Voraussetzungen:** FRITZ!OS ab 7.39 (Szenarien und Untervorlagen in der Schnittstelle). Der FRITZ!Box-Benutzer braucht die Berechtigung **Smart Home**. Fehlt sie, meldet das Log „access denied (403) after a fresh login“.
+
+**Hinweis:** Eine Vorlage überschreibt auch Solltemperaturen, die an einzelnen Reglern von Hand gesetzt wurden.
+
+**Fehlerfälle:** Einträge, die es in der FRITZ!Box nicht gibt, erzeugen eine Warnung im Log und werden übersprungen. Wird eine Vorlage in der FRITZ!Box gelöscht oder aus `include` entfernt, entfernt das Plugin den Schalter beim nächsten Abgleich. Ist die FRITZ!Box beim Abgleich nicht erreichbar, bleiben die Schalter bestehen.
 
 ## Migration vom Original-Plugin
 

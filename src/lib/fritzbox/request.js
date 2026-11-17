@@ -9,6 +9,7 @@
  *    accepted the connection but never answered blocked the caller forever
  *  - the digest retry runs at most once per request (no auth loop on 401)
  *  - no preemptive Basic auth: credentials are only used for the Digest answer
+ *  - requestAHA debug output masks the session ID
  */
 
 const debug = require('debug')('fritzbox:request');
@@ -138,6 +139,7 @@ exports.requestAHA = async (host, cmd) => {
   debug('Request AHA', {
     uri: uri,
     ...cmd,
+    ...(cmd && cmd.sid ? { sid: '***' } : {}),
   });
 
   try {
